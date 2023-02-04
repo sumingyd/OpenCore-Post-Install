@@ -60,39 +60,36 @@ module.exports = {
         editLinkText: '帮助我们改进此页面!',
         logo: '/homepage.png',
         nav: [{
-            text: '主页面',
-            items: [{
-                text: 'Home Site',
-                link: 'https://sumingyd.github.io/'
-            },
+            text: '指南菜单',
+            items: [
             {
                 text: 'OpenCore 安装指南',
                 link: 'https://sumingyd.github.io/OpenCore-Install-Guide/'
             },
             {
-                text: 'OpenCore Multiboot',
+                text: 'OpenCore 多引导',
                 link: 'https://sumingyd.github.io/OpenCore-Multiboot/'
             },
             {
-                text: 'Getting Started With ACPI',
+                text: 'ACPI入门',
                 link: 'https://sumingyd.github.io/Getting-Started-With-ACPI/'
             },
             {
-                text: 'GPU Buyers Guide',
+                text: '显卡购买指南',
                 link: 'https://sumingyd.github.io/GPU-Buyers-Guide/'
             },
             {
-                text: 'Wireless Buyers Guide',
+                text: '无限购买指南',
                 link: 'https://sumingyd.github.io/Wireless-Buyers-Guide/'
             },
             {
-                text: 'Anti Buyers Guide',
+                text: '避免购买指南',
                 link: 'https://sumingyd.github.io/Anti-Hackintosh-Buyers-Guide/'
             },
             ]
         },],
         sidebar: [{
-            title: 'Introduction',
+            title: '简介',
             collapsable: false,
             sidebarDepth: 1,
             children: [
@@ -101,131 +98,131 @@ module.exports = {
 
         },
         {
-            title: 'Universal',
+            title: '通用',
             collapsable: false,
             sidebarDepth: 2,
             children: [
 
-                ['/universal/audio', 'Fixing Audio'],
-                ['/universal/oc2hdd', 'Booting without USB'],
-                ['/universal/update', 'Updating OpenCore, kexts and macOS'],
-                ['/universal/drm', 'Fixing DRM'],
-                ['/universal/iservices', 'Fixing iServices'],
-                ['/universal/pm', 'Fixing Power Management'],
-                ['/universal/sleep', 'Fixing Sleep'],
+                ['/universal/audio', '修复音频'],
+                ['/universal/oc2hdd', '没有USB启动'],
+                ['/universal/update', '更新OpenCore, kexts和macOS'],
+                ['/universal/drm', '修复 DRM'],
+                ['/universal/iservices', '修复 iServices'],
+                ['/universal/pm', '修复电源管理'],
+                ['/universal/sleep', '修复睡眠'],
             ]
         },
         {
-            title: 'USB Fixes',
+            title: 'USB 修复',
             collapsable: false,
             sidebarDepth: 1,
             children: [
-                ['/usb/', 'USB Mapping: Introduction'],
-                ['/usb/system-preparation', 'System Preparation'],
+                ['/usb/', 'USB Mapping: 简介'],
+                ['/usb/system-preparation', '系统准备'],
                 {
-                    title: 'USB Mapping',
+                    title: 'USB 映射',
                     collapsable: true,
                     sidebarDepth: 2,
                     children: [
-                        ['/usb/intel-mapping/intel', 'Intel USB mapping'],
-                        ['/usb/manual/manual', 'Manual Mapping'],
+                        ['/usb/intel-mapping/intel', 'Intel USB 映射'],
+                        ['/usb/manual/manual', 'Manual 映射'],
                     ]
                 },
                 {
-                    title: 'Miscellaneous Fixes',
+                    title: '杂项修复',
                     collapsable: true,
                     sidebarDepth: 1,
                     children: [
-                        ['/usb/misc/power', 'Fixing USB Power'],
-                        ['/usb/misc/shutdown', 'Fixing Shutdown/Restart'],
-                        ['/usb/misc/instant-wake', 'Fixing Instant Wake'],
-                        ['/usb/misc/keyboard', 'Fixing Keyboard Wake Issues'],
+                        ['/usb/misc/power', '修复 USB 电源'],
+                        ['/usb/misc/shutdown', '修复关机/重启'],
+                        ['/usb/misc/instant-wake', '修复瞬间唤醒'],
+                        ['/usb/misc/keyboard', '修复键盘唤醒问题'],
                     ]
                 },
             ]
         },
         {
-            title: 'Security',
+            title: '安全',
             collapsable: false,
             sidebarDepth: 2,
             children: [
-                ['/universal/security', 'Security and FileVault'],
+                ['/universal/security', '安全性和文件库'],
                 {
                     title: '',
                     collapsable: false,
                     sidebarDepth: 2,
                     children: [
-                        ['/universal/security/filevault', 'FileVault'],
-                        ['/universal/security/vault', 'Vault'],
-                        ['/universal/security/scanpolicy', 'ScanPolicy'],
-                        ['/universal/security/password', 'OpenCore Menu Password'],
-                        ['/universal/security/applesecureboot', 'Apple Secure Boot'],
+                        ['/universal/security/filevault', '文件库'],
+                        ['/universal/security/vault', '库'],
+                        ['/universal/security/scanpolicy', '扫描策略'],
+                        ['/universal/security/password', 'OpenCore菜单密码'],
+                        ['/universal/security/applesecureboot', '苹果安全引导'],
                     ]
                 },
             ]
         },
         {
-            title: 'Laptop Specifics',
+            title: '笔记本电脑细节',
             collapsable: false,
             children: [
-                ['/laptop-specific/battery', 'Fixing Battery Read-outs'],
+                ['/laptop-specific/battery', '修复电池读数'],
 
             ]
         },
         {
-            title: 'Cosmetics',
+            title: '美化',
             collapsable: false,
             children: [
-                ['/cosmetic/verbose', 'Fixing Resolution and Verbose'],
-                ['/cosmetic/gui', 'Add GUI and Boot-chime'],
-                ['/universal/memory', 'Fixing MacPro7,1 Memory Errors'],
+                ['/cosmetic/verbose', '修复分辨率和啰嗦模式'],
+                ['/cosmetic/gui', '添加gui和开机铃声'],
+                ['/universal/memory', '修复MacPro7,1内存错误'],
             ]
         },
         {
-            title: 'Multiboot',
+            title: '多引导',
             collapsable: false,
             children: [
-                ['https://sumingyd.github.io/OpenCore-Multiboot/', 'OpenCore Multiboot'],
-                ['/multiboot/bootstrap', 'Setting up LauncherOption'],
-                ['/multiboot/bootcamp', 'Installing BootCamp'],
+                ['https://sumingyd.github.io/OpenCore-Multiboot/', 'OpenCore 多引导'],
+                ['/multiboot/bootstrap', '设置启动选项'],
+                ['/multiboot/bootcamp', '安装bootcamp'],
             ]
         },
         {
-            title: 'Miscellaneous',
+            title: '杂项',
             collapsable: false,
             children: [
-                ['/misc/rtc', 'Fixing RTC'],
-                ['/misc/msr-lock', 'Fixing CFG Lock'],
-                ['/misc/nvram', 'Emulated NVRAM'],
+                ['/misc/rtc', '修复 RTC'],
+                ['/misc/msr-lock', '修复 CFG Lock'],
+                ['/misc/nvram', '模拟 NVRAM'],
             ]
         },
         {
-            title: 'GPU Patching',
+            title: 'GPU 补丁',
             collapsable: false,
             children: [
-                ['/gpu-patching/', 'In-depth GPU patching'],
+                ['/gpu-patching/', '深入GPU修补'],
                 {
-                    title: 'Modern Intel iGPU',
+                    title: '现代英特尔iGPU',
                     collapsable: false,
                     children: [
-                        ['/gpu-patching/intel-patching/', 'Intro to iGPU patching'],
-                        ['/gpu-patching/intel-patching/vram', 'VRAM patching'],
-                        ['/gpu-patching/intel-patching/connector', 'Connector-type patching'],
-                        ['/gpu-patching/intel-patching/busid', 'BusID patching'],
+                        ['/gpu-patching/intel-patching/', 'iGPU补丁介绍'],
+                        ['/gpu-patching/intel-patching/vram', 'VRAM 补丁'],
+                        ['/gpu-patching/intel-patching/connector', 'Connector-type 补丁'],
+                        ['/gpu-patching/intel-patching/busid', 'BusID 补丁'],
                     ]
                 },
                 {
-                    title: 'Legacy Intel iGPU',
+                    title: '传统英特尔iGPU',
                     collapsable: false,
                     children: [
-                        ['/gpu-patching/legacy-intel/', 'GMA Patching'],
+                        ['/gpu-patching/legacy-intel/', 'GMA 补丁'],
                     ]
                 },
                 {
-                    title: 'Legacy Nvidia',
+                    title: '传统Nvidia',
                     collapsable: false,
                     children: [
-                        ['/gpu-patching/nvidia-patching/', 'Nvidia Patching'],
+                        ['/gpu-patching/nvidia-patching/', 'Nvidia 补丁'],
                     ]
                 },
             ]
