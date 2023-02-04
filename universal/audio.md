@@ -1,51 +1,51 @@
-# Fixing audio with AppleALC
+# 修复AppleALC的音频
 
-So to start, we'll assume you already have Lilu and AppleALC installed, if you're unsure if it's been loaded correctly you can run the following in terminal(This will also check if AppleHDA is loaded, as without this AppleALC has nothing to patch):
+首先，我们假设你已经安装了Lilu和AppleALC，如果你不确定它们是否被正确加载，你可以在终端中运行以下命令(这也会检查AppleHDA是否被加载，因为没有这个AppleALC就没有什么可以打补丁):
 
 ```sh
 kextstat | grep -E "AppleHDA|AppleALC|Lilu"
 ```
 
-If all 3 show up, you're good to go. And make sure VoodooHDA **is not present**. This will conflict with AppleALC otherwise.
+如果3个都出现了，你就可以开始了。并确保VoodooHDA **不存在**。否则这将与AppleALC冲突。
 
-If you're having issues, see the [Troubleshooting section](../universal/audio.md#troubleshooting)
+如果您遇到问题，请参阅[故障排除部分](../universal/audio.md#troubleshooting)
 
-## Finding your layout ID
+## 找到你的 layout ID
 
-So for this example, we'll assume your codec is ALC1220. To verify yours, you have a couple options:
+在这个例子中，我们假设你的编解码器是ALC1220。要验证你的选择，你有两个选择:
 
-* Checking motherboard's spec page and manual
-* Check Device Manager in Windows
-* Check HWInfo64 in Windows
-  * Make sure both Summary-only and Sensors-only are deselected when opening
-* Check AIDA64 Extreme in Windows
-* Run `cat` in terminal on Linux
+* 检查主板规格页和说明书
+* 检查Windows中的设备管理器
+* 在Windows中检查HWInfo64
+  * 打开时，请确保取消选择“仅限摘要”和“仅限传感器”
+* 在Windows中检查AIDA64 Extreme
+* 在Linux终端中运行`cat`
   * `cat /proc/asound/card0/codec#0 | less`
 
-Now with a codec, we'll want to cross reference it with AppleALC's supported codec list:
+现在有了编解码器，我们需要将它与AppleALC支持的编解码器列表进行交叉引用:
 
-* [AppleALC Supported Codecs](https://github.com/acidanthera/AppleALC/wiki/Supported-codecs)
+* [AppleALC支持的编解码器](https://github.com/acidanthera/AppleALC/wiki/Supported-codecs)
 
-With the ALC1220, we get the following:
+使用ALC1220，我们得到以下结果:
 
 ```
 0x100003, layout 1, 2, 3, 5, 7, 11, 13, 15, 16, 21, 27, 28, 29, 34
 ```
 
-So from this it tells us 2 things:
+所以从这它告诉我们两件事:
 
-* Which hardware revision is supported(`0x100003`), only relevant when multiple revisions are listed with different layouts
-* Various layout IDs supported by our codec(`layout 1, 2, 3, 5, 7, 11, 13, 15, 16, 21, 27, 28, 29, 34`)
+* 支持哪个硬件版本(`0x100003`)，仅当以不同布局列出多个版本时相关
+* 编解码器支持的各种布局id(`layout 1, 2, 3, 5, 7, 11, 13, 15, 16, 21, 27, 28, 29, 34`)
 
-Now with a list of supported layout IDs,  we're ready to try some out
+现在有了一个受支持的布局id列表，我们准备进行一些尝试
 
-**Note**: If your Audio Codec is ALC 3XXX this is likely false and just a rebranded controller, do your research and see what the actual controller is.
+**注意**:如果你的音频编解码器是ALC 3XXX，这很可能是错误的，只是重新命名的控制器，请进行研究，看看实际的控制器是什么。
 
-* An example of this is the ALC3601, but when we load up Linux the real name is shown: ALC 671
+* 一个这样的例子是ALC3601，但是当我们加载Linux时，真实的名称显示为:ALC 671
 
-## Testing your layout
+## 测试你的布局
 
-To test out our layout IDs, we're going to be using the boot-arg `alcid=xxx` where xxx is your layout. Remember that to try layout IDs **one at a time**. Do not add multiple IDs or alcid boot-args, if one doesn't work then try the next ID and etc
+为了测试我们的布局id，我们将使用引导参数`alcid=xxx`，其中xxx是你的布局。请记住，**一次只尝试一个**布局id。不要添加多个ID或alcid在boot-args中, 如果一个不工作，然后尝试下一个ID等
 
 ```
 config.plist
@@ -55,19 +55,19 @@ config.plist
           ├── boot-args | String | alcid=11
 ```
 
-If no layout ID works, try creating [SSDT-HPET fixes](https://dortania.github.io/Getting-Started-With-ACPI/Universal/irq.html) for your system - these are required on laptops and some desktops for AppleHDA to work.
+如果没有布局ID工作，尝试为您的系统创建 [SSDT-HPET fixes](https://sumingyd.github.io/Getting-Started-With-ACPI/Universal/irq.html) 这些在笔记本电脑和一些台式机上是必需的，以便AppleHDA工作。
 
-## Making Layout ID more permanent
+## 使 Layout ID 更永久
 
-Once you've found a Layout ID that works with your hack, we can create a more permanent solution for closer to how real macs set their Layout ID.
+一旦你找到了一个与你的黑苹果有效的布局ID，我们可以创建一个更永久的解决方案，更接近真实的mac如何设置他们的布局ID。
 
-With AppleALC, there's a priority hierarchy with which properties are prioritized:
+在AppleALC中，有一个优先级层次结构来区分属性的优先级:
 
-1. `alcid=xxx` boot-arg, useful for debugging and overrides all other values
-2. `alc-layout-id` in DeviceProperties, **should only be used on Apple hardware**
-3. `layout-id` in DeviceProperties, **should be used on both Apple and non-Apple hardware**
+1. `alcid=xxx` 引导参数，用于调试和覆盖所有其他值
+2. `alc-layout-id` 中的' alc-layout-id '， **只能在苹果硬件上使用**
+3. `layout-id` 中的' layout-id '， **应该在苹果和非苹果硬件上使用**
 
-To start, we'll need to find out where our Audio controller is located on the PCI map. For this, we'll be using a handy tool called [gfxutil](https://github.com/acidanthera/gfxutil/releases) then with the macOS terminal:
+首先，我们需要找到音频控制器在PCI地图上的位置。为此，我们将使用一个名为 [gfxutil](https://github.com/acidanthera/gfxutil/releases) 的方便工具，然后与macOS终端一起使用:
 
 ```sh
 path/to/gfxutil -f HDEF
@@ -75,105 +75,105 @@ path/to/gfxutil -f HDEF
 
 ![](../images/post-install/audio-md/gfxutil-hdef.png)
 
-Then add this PciRoot with the child `layout-id` to your config.plist under DeviceProperties -> Add:
+然后将这个带有子元素`layout-id`的PciRoot添加到配置中。
 
 ![](../images/post-install/audio-md/config-layout-id.png)
 
-Note that AppleALC can accept both Decimal/Number and Hexadecimal/Data, generally the best method is Hex as you avoid any unnecessary conversions. You can use a simple [decimal to hexadecimal calculator](https://www.rapidtables.com/convert/number/decimal-to-hex.html) to find yours. `printf '%x\n' DECI_VAL`:
+注意AppleALC可以接受十进制/Number和十六进制/Data，通常最好的方法是十六进制，因为你可以避免任何不必要的转换。你可以使用一个简单的[十进制到十六进制计算器](https://www.rapidtables.com/convert/number/decimal-to-hex.html) 来找到你的答案。 `printf '%x\n' DECI_VAL`:
 
 ![](../images/post-install/audio-md/hex-convert.png)
 
-So in this example, `alcid=11` would become  either:
+所以在这个例子中，`alcid=11`会变成:
 
 * `layout-id | Data | <0B000000>`
 * `layout-id | Number | <11>`
 
-Note that the final HEX/Data value should be 4 bytes in total(ie. `0B 00 00 00` ), for layout IDs surpassing 255(`FF 00 00 00`) will need to remember that the bytes are swapped. So 256 will become `00 01 00 00`
+请注意，最终的十六进制/数据值总共应该是4个字节。`0B 00 00 00`)，对于超过255的布局id (`FF 00 00 00`)需要记住字节是交换的。所以256会变成`00 01 00 00`
 
-* HEX Swapping and data size can be completely ignored using the Decimal/Number method
+* 使用Decimal/Number方法可以完全忽略十六进制交换和数据大小
 
-**Reminder**: You **MUST** remove the boot-arg afterwards, as it will always have the top priority and so AppleALC will ignore all other entries like in DeviceProperties
+**提醒**:你**必须**删除引导参数，因为它总是优先级最高的，所以AppleALC会忽略所有其他条目，比如DeviceProperties
 
-## Miscellaneous issues
+## 各种各样的问题
 
-### No Mic on AMD
+### AMD上没有麦克风
 
-* This is a common issue with when running AppleALC with AMD, specifically no patches have been made to support Mic input. At the moment the "best" solution is to either buy a USB DAC/Mic or go the VoodooHDA.kext method. Problem with VoodooHDA is that it's been known to be unstable and have worse audio quality than AppleALC
+* 这是AMD运行AppleALC时常见的问题，特别是没有补丁来支持Mic输入。目前“最好”的解决方案是购买USB DAC/Mic或使用VoodooHDA.kext方法。众所周知，VoodooHDA的问题是不稳定，音频质量比AppleALC更差
 
-### Same layout ID from Clover doesn't work on OpenCore
+### 来自Clover的相同布局ID在OpenCore上不起作用
 
-This is likely do to IRQ conflicts, on Clover there's a whole sweep of ACPI hot-patches that are applied automagically. Fixing this is a little bit painful but [SSDTTime](https://github.com/corpnewt/SSDTTime)'s `FixHPET` option can handle most cases.
+这可能会对IRQ冲突造成影响，在Clover上有一整套自动应用的ACPI热补丁。修复这个有点痛苦，但[SSDTTime](https://github.com/corpnewt/SSDTTime)的 `FixHPET` 选项可以处理大多数情况。
 
-For odd cases where RTC and HPET take IRQs from other devices like USB and audio, you can reference the [HP Compaq DC7900 ACPI patch](https://github.com/khronokernel/trashOS/blob/master/HP-Compaq-DC7900/README.md#dsdt-edits) example in the trashOS repo
+对于RTC和HPET从USB和音频等其他设备获取irq的奇怪情况，您可以参考trashOS仓库中的[HP Compaq DC7900 ACPI 补丁](https://github.com/khronokernel/trashOS/blob/master/HP-Compaq-DC7900/README.md#dsdt-edits) 示例
 
-### Kernel Panic on power state changes in 10.15
+### 10.15中电源状态改变时的内核崩溃
 
-* Enable PowerTimeoutKernelPanic in your config.plist:
+* 在config.plist中启用 PowerTimeoutKernelPanic
   * `Kernel -> Quirks -> PowerTimeoutKernelPanic -> True`
 
-## Troubleshooting
+## 故障诊断
 
-So for troubleshooting, we'll need to go over a couple things:
+对于故障诊断,我们需要复习几件事:
 
-* [Checking if you have the right kexts](#checking-if-you-have-the-right-kexts)
-* [Checking if AppleALC is patching correctly](#checking-if-applealc-is-patching-correctly)
-* [Checking AppleHDA is vanilla](#checking-applehda-is-vanilla)
-* [AppleALC working inconsistently](#applealc-working-inconsistently)
-* [AppleALC not working correctly with multiple sound cards](#applealc-not-working-correctly-with-multiple-sound-cards)
-* [AppleALC not working from Windows reboot](#applealc-not-working-from-windows-reboot)
+* [检查你是否有正确的kexts](#checking-if-you-have-the-right-kexts)
+* [检查AppleALC是否打补丁正确](#checking-if-applealc-is-patching-correctly)
+* [检查AppleHDA是否为vanilla](#checking-applehda-is-vanilla)
+* [AppleALC工作不一致](#applealc-working-inconsistently)
+* [AppleALC不能正确地使用多个声卡](#applealc-not-working-correctly-with-multiple-sound-cards)
+* [AppleALC在Windows重启后不能工作](#applealc-not-working-from-windows-reboot)
 
-### Checking if you have the right kexts
+### 检查是否有正确的kext
 
-To start, we'll assume you already have Lilu and AppleALC installed, if you're unsure if it's been loaded correctly you can run the following in terminal(This will also check if AppleHDA is loaded, as without this AppleALC has nothing to patch):
+首先，我们假设你已经安装了Lilu和AppleALC，如果你不确定它们是否被正确加载，你可以在终端中运行以下命令(这也会检查AppleHDA是否被加载，因为没有这个AppleALC就没有什么可以打补丁):
 
 ```sh
 kextstat | grep -E "AppleHDA|AppleALC|Lilu"
 ```
 
-If all 3 show up, you're good to go. And make sure VoodooHDA **is not present**. This will conflict with AppleALC otherwise. Other kexts to make sure you do not have in your system:
+如果3个都出现了，你就可以开始了。确保VoodooHDA **不存在**。否则这将与AppleALC冲突。确保系统中没有的其他kext:
 
 * RealtekALC.kext
 * CloverALC.kext
 * VoodooHDA.kext
 * HDA Blocker.kext
-* HDAEnabler#.kext(# can be 1, 2, or 3)
+* HDAEnabler#.kext(# 可以是1、2或3)
 
-> Hey Lilu and/or AppleALC aren't showing up
+> 嘿，Lilu和/或AppleALC没有出现
 
-Generally the best place to start is by looking through your OpenCore logs and seeing if Lilu and AppleALC injected correctly:
+一般来说，最好的开始是通过查看你的OpenCore日志，看看Lilu和AppleALC是否正确注入:
 
 ```
 14:354 00:020 OC: Prelink injection Lilu.kext () - Success
 14:367 00:012 OC: Prelink injection AppleALC.kext () - Success
 ```
 
-If it says failed to inject:
+如果它说注入失败:
 
 ```
 15:448 00:007 OC: Prelink injection AppleALC.kext () - Invalid Parameter
 ```
 
-Main places you can check as to why:
+你可以查看的主要地方是:
 
-* **Injection order**: Make sure that Lilu is above AppleALC in kext order
-* **All kexts are latest release**: Especially important for Lilu plugins, as mismatched kexts can cause issues
+* **注入顺序**:确保Lilu在kext顺序上高于AppleALC
+* **所有的kext都是最新版本**:对于Lilu插件尤其重要，因为不匹配的kext可能会导致问题
 
 Note: To setup file logging, see [OpenCore Debugging](https://dortania.github.io/OpenCore-Install-Guide/troubleshooting/debug.html).
 
-### Checking if AppleALC is patching correctly
+### 检查AppleALC是否正确打补丁
 
-So with AppleALC, one of the most easiest things to check if the patching was done right was to see if your audio controller was renamed correctly. Grab [IORegistryExplorer](https://github.com/khronokernel/IORegistryClone/blob/master/ioreg-302.zip) and see if you have an HDEF device:
+所以对于AppleALC，检查补丁是否正确的最简单的事情之一是检查你的音频控制器是否被正确重命名。获取 [IORegistryExplorer](https://github.com/khronokernel/IORegistryClone/blob/master/ioreg-302.zip) ，看看你是否有一个HDEF设备:
 
 ![](../images/post-install/audio-md/hdef.png)
 
-As you can see from the above image, we have the following:
+正如你从上面的图像中看到的，我们有以下几点:
 
-* HDEF Device meaning our rename did the job
-* AppleHDAController attached meaning Apple's audio kext attached successfully
-* `alc-layout-id` is a property showing our boot-arg/DeviceProperty injection was successful
-  * Note: `layout-id | Data | 07000000` is the default layout, and `alc-layout-id` will override it and be the layout AppleHDA will use
+* HDEF Device意味着我们的重命名完成了这项工作
+* AppleHDAController连接意味着Apple的音频kext连接成功
+* `alc-layout-id`是一个属性，表明我们的boot-arg/DeviceProperty注入成功
+  * 注意:`layout-id | Data | 07000000`是默认布局，`alc-layout-id`将覆盖它并成为AppleHDA使用的布局
 
-Note: **Do not rename your audio controller manually**, this can cause issues as AppleALC is trying to patch already. Let AppleALC do it's work.
+注意:**不要手动重命名你的音频控制器**，这可能会导致问题，因为AppleALC正在尝试打补丁。让AppleALC做它的工作。
 
 **More examples**:
 
@@ -183,64 +183,64 @@ Correct layout-id           |  Incorrect layout-id
 
 As you can see from the above 2, the right image is missing a lot of AppleHDAInput devices, meaning that AppleALC can't match up your physical ports to something it can understand and output to. This means you've got some work to find the right layout ID for your system.
 
-### Checking AppleHDA is vanilla
+### 检查AppleHDA是否正常
 
-This section is mainly relevant for those who were replacing the stock AppleHDA with a custom one, this is going to verify whether or not yours is genuine:
+本节主要针对那些用定制AppleHDA替换了库里AppleHDA的人，这将验证你的AppleHDA是否为正品:
 
 ```sh
 sudo kextcache -i / && sudo kextcache -u /
 ```
 
-This will check if the signature is valid for AppleHDA, if it's not then you're going to need to either get an original copy of AppleHDA for your system and replace it or update macOS(kexts will be cleaned out on updates). This will only happen when you're manually patched AppleHDA so if this is a fresh install it's highly unlikely you will have signature issues.
+这将检查签名对AppleHDA是否有效，如果无效，则需要为你的系统获取AppleHDA的原始副本并替换它，或者更新macOS(更新时kext将被清除)。只有手动打过补丁的AppleHDA才会出现这种情况，所以如果是新安装，你的签名不太可能出现问题。
 
-### AppleALC working inconsistently
+### AppleALC工作不一致
 
-Sometimes rare conditions can occur where your hardware isn't initialized in time for AppleHDAController resulting in no sound output. To get around this, you can either:
+有时会出现一些罕见的情况，比如你的硬件没有及时初始化AppleHDAController，从而导致没有声音输出。要解决这个问题，你可以:
 
-Specify in boot-args the delay:
+在boot-args中指定延迟:
 
 ```
 alcdelay=1000
 ```
 
-Or Specify via DeviceProperties(in your HDEF device):
+或通过DeviceProperties(在你的HDEF设备中)指定:
 
 ```
 alc-delay | Number | 1000
 ```
 
-The above boot-arg/property will delay AppleHDAController by 1000 ms(1 second), note the ALC delay cannot exceed [3000 ms](https://github.com/acidanthera/AppleALC/blob/2ed6af4505a81c8c8f5a6b18c249eb478266739c/AppleALC/kern_alc.cpp#L373)
+上面的引导参数/属性将使AppleHDAController延迟1000 ms(1秒)，注意ALC延迟不能超过[3000 ms](https://github.com/acidanthera/AppleALC/blob/2ed6af4505a81c8c8f5a6b18c249eb478266739c/AppleALC/kern_alc.cpp#L373)
 
-### AppleALC not working correctly with multiple sound cards
+### AppleALC不能正确处理多个声卡
 
-For rare situations where you have 2 sounds cards(ex. onboard Realtek and an external PCIe card), you may want to avoid AppleALC patching devices you either don't use or don't need patching(like native PCIe cards). This is especially important if you find that AppleALC will not patch you onboard audio controller when the external one is present.
+在极少数情况下，你有2个声卡(例如内置Realtek和一个外部PCIe卡)，你可能想要避免使用你不使用或不需要补丁的AppleALC补丁设备(如本机PCIe卡)。如果你发现当外部音频控制器存在时，AppleALC不会给你的板载音频控制器打补丁，这一点尤其重要。
 
-To get around this, we'll first need to identify the location of both our audio controllers. The easiest way is to run [gfxutil](https://github.com/acidanthera/gfxutil/releases) and search for the PCI IDs:
+为了解决这个问题，我们首先需要确定我们的音频控制器的位置。最简单的方法是运行 [gfxutil](https://github.com/acidanthera/gfxutil/releases)并搜索PCI id:
 
 ```sh
 /path/to/gfxutil
 ```
 
-Now with this large output you'll want to find your PciRoot pathing, for this example, lets use a Creative Sound-Blaster AE-9PE PCIe audio card. For this, we know the PCI ID is `1102:0010`. So looking through our gfxutil output we get this:
+现在有了这个大输出，你需要找到你的PciRoot路径，例如，让我们使用创造性的Sound-Blaster AE-9PE PCIe声卡。为此，我们知道PCI ID是`1102:0010`。因此，查看我们的gfxutil输出，我们得到以下结果:
 
 ```
 66:00.0 1102:0010 /PC02@0/BR2A@0/SL05@0 = PciRoot(0x32)/Pci(0x0,0x0)/Pci(0x0,0x0)
 ```
 
-From here, we can clearly see our PciRoot pathing is:
+从这里，我们可以清楚地看到我们的PciRoot路径是:
 
 ```
 PciRoot(0x32)/Pci(0x0,0x0)/Pci(0x0,0x0)
 ```
 
-* **Note**: This will assume you know both the Vendor and Device ID of the external sound card. For reference, these are the common Vendor IDs:
+* **注意**:这将假设您知道外部声卡的供应商和设备ID。作为参考，这些是常见的供应商id:
   * Creative Labs: `1102`
   * AsusTek: `1043`
-* **Note 2**: Your ACPI and PciRoot path will look different, so pay attention to **your** gfxutil output
+* **注意2**:您的ACPI和PciRoot路径看起来不同，因此请注意**您的** gfxutil输出
 
-Now that we have our PciRoot pathing, we can finally open up our config.plist and add our patch.
+现在我们有了我们的PciRoot路径，我们终于可以打开config.plist并添加我们的补丁。
 
-Under DeviceProperties -> Add, you'll want to add your PciRoot(as a Dictionary) with the child called `external-audio`:
+在DeviceProperties -> Add下，您将添加您的PciRoot(作为一个字典)与名为`external-audio`的子进程:
 
 ```
 DeviceProperties
@@ -251,11 +251,11 @@ DeviceProperties
 
 ![](../images/post-install/audio-md/external-audio.png)
 
-And with this done, you can reboot and AppleALC should now ignore your external audio controller!
+完成这些后，你可以重新启动，AppleALC现在应该会忽略你的外部音频控制器!
 
-### AppleALC not working from Windows reboot
+### 重启Windows后AppleALC无法正常工作
 
-If you find that rebooting from Windows into macOS breaks audio, we recommend either adding `alctcsel=1` to boot-args or add this property to your audio device in DeviceProperties:
+如果你发现从Windows重新启动到macOS中断了音频，我们建议在boot-args中添加`alctcsel=1`，或者在DeviceProperties中将此属性添加到你的音频设备:
 
 ```
 DeviceProperties
