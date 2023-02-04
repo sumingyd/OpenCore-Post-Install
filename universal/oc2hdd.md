@@ -22,4 +22,4 @@
 
 ## 给老用户的特别提示
 
-当传输EFI时，仍然有引导扇区需要写入，以便您的非uefi BIOS能够找到它。所以不要忘记在你的macOS上重新运行 [`BootInstallARCH.tool`](https://dortania.github.io/OpenCore-Install-Guide/installer-guide/mac-install.html#legacy-setup)
+当传输EFI时，仍然有引导扇区需要写入，以便您的非uefi BIOS能够找到它。所以不要忘记在你的macOS上重新运行 [`BootInstallARCH.tool`](https://sumingyd.github.io/OpenCore-Install-Guide/installer-guide/mac-install.html#legacy-setup)
