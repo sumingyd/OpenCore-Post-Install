@@ -66,7 +66,7 @@ module.exports = {
                 link: 'https://sumingyd.github.io/'
             },
             {
-                text: 'OpenCore Install Guide',
+                text: 'OpenCore 安装指南',
                 link: 'https://sumingyd.github.io/OpenCore-Install-Guide/'
             },
             {
