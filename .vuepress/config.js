@@ -104,7 +104,7 @@ module.exports = {
             children: [
 
                 ['/universal/audio', '修复音频'],
-                ['/universal/oc2hdd', '没有USB启动'],
+                ['/universal/oc2hdd', '无需USB启动'],
                 ['/universal/update', '更新OpenCore, kexts和macOS'],
                 ['/universal/drm', '修复 DRM'],
                 ['/universal/iservices', '修复 iServices'],
@@ -197,7 +197,7 @@ module.exports = {
             ]
         },
         {
-            title: 'GPU 补丁',
+            title: 'GPU 修补',
             collapsable: false,
             children: [
                 ['/gpu-patching/', '深入GPU修补'],
