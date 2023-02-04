@@ -3,7 +3,7 @@ const {
 } = require('../package')
 
 module.exports = {
-    title: 'OpenCore Post-Install',
+    title: 'OpenCore 安装后',
     head: [
         ['meta', {
             name: 'theme-color',
@@ -57,10 +57,10 @@ module.exports = {
         lastUpdated: true,
         repo: 'https://github.com/sumingyd/OpenCore-Post-Install',
         editLinks: true,
-        editLinkText: 'Help us improve this page!',
+        editLinkText: '帮助我们改进此页面!',
         logo: '/homepage.png',
         nav: [{
-            text: 'Dortania Guides',
+            text: '主页面',
             items: [{
                 text: 'Home Site',
                 link: 'https://sumingyd.github.io/'
