@@ -55,7 +55,7 @@ module.exports = {
 
     themeConfig: {
         lastUpdated: true,
-        repo: 'https://github.com/dortania/OpenCore-Post-Install',
+        repo: 'https://github.com/sumingyd/OpenCore-Post-Install',
         editLinks: true,
         editLinkText: 'Help us improve this page!',
         logo: '/homepage.png',
@@ -63,31 +63,31 @@ module.exports = {
             text: 'Dortania Guides',
             items: [{
                 text: 'Home Site',
-                link: 'https://dortania.github.io/'
+                link: 'https://sumingyd.github.io/'
             },
             {
                 text: 'OpenCore Install Guide',
-                link: 'https://dortania.github.io/OpenCore-Install-Guide/'
+                link: 'https://sumingyd.github.io/OpenCore-Install-Guide/'
             },
             {
                 text: 'OpenCore Multiboot',
-                link: 'https://dortania.github.io/OpenCore-Multiboot/'
+                link: 'https://sumingyd.github.io/OpenCore-Multiboot/'
             },
             {
                 text: 'Getting Started With ACPI',
-                link: 'https://dortania.github.io/Getting-Started-With-ACPI/'
+                link: 'https://sumingyd.github.io/Getting-Started-With-ACPI/'
             },
             {
                 text: 'GPU Buyers Guide',
-                link: 'https://dortania.github.io/GPU-Buyers-Guide/'
+                link: 'https://sumingyd.github.io/GPU-Buyers-Guide/'
             },
             {
                 text: 'Wireless Buyers Guide',
-                link: 'https://dortania.github.io/Wireless-Buyers-Guide/'
+                link: 'https://sumingyd.github.io/Wireless-Buyers-Guide/'
             },
             {
                 text: 'Anti Buyers Guide',
-                link: 'https://dortania.github.io/Anti-Hackintosh-Buyers-Guide/'
+                link: 'https://sumingyd.github.io/Anti-Hackintosh-Buyers-Guide/'
             },
             ]
         },],
@@ -185,7 +185,7 @@ module.exports = {
             title: 'Multiboot',
             collapsable: false,
             children: [
-                ['https://dortania.github.io/OpenCore-Multiboot/', 'OpenCore Multiboot'],
+                ['https://sumingyd.github.io/OpenCore-Multiboot/', 'OpenCore Multiboot'],
                 ['/multiboot/bootstrap', 'Setting up LauncherOption'],
                 ['/multiboot/bootcamp', 'Installing BootCamp'],
             ]
