@@ -1,12 +1,12 @@
-# Fixing DRM support and iGPU performance
+# 修复DRM支持和iGPU性能
 
-* **Note**: Safari 14 and macOS 11, Big Sur are currently unsupported by WhateverGreen's DRM patches. Safari 13 in Catalina and older are supported just fine however.
-* **Note 2**: Browsers not using hardware based DRM (ie. Mozilla Firefox or Chromium-based browsers like Google Chrome and Microsoft Edge) will have working DRM without any work both on iGPUs and dGPUs. The below guide is for Safari and other applications using hardware-based DRM.
+* **注意**:Safari 14和macOS 11, Big Sur目前不受WhateverGreen的DRM补丁支持。不过，在卡特琳娜及更老版本的Safari 13支持得还不错。
+* **注2**:浏览器不使用基于硬件的DRM (ie Mozilla Firefox或基于Chrome的浏览器，如谷歌Chrome和Microsoft Edge)将有工作的DRM，而无需在igpu和dgpu上进行任何工作。以下指南是使用基于硬件的DRM Safari和其他应用程序。
 
-So with DRM, we have a couple things we need to mention:
+关于DRM，我们有几点需要提一下:
 
-* DRM requires a supported dGPU
-  * See the [GPU Buyers Guide](https://dortania.github.io/GPU-Buyers-Guide/) for supported cards
+* DRM需要支持的dGPU
+  * 有关支持的卡，请参阅[GPU购买者指南](https://sumingyd.github.io/GPU-Buyers-Guide/)
 * DRM is broken for iGPU-only systems
   * This could be fixed with Shiki (now WhateverGreen) til 10.12.2, but broke with 10.12.3
   * This is due to the issue that our iGPUs don't support Apple's firmware and that our [Management Engine](https://en.wikipedia.org/wiki/Intel_Management_Engine) doesn't have Apple's certificate
