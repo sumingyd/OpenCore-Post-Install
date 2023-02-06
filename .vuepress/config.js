@@ -63,7 +63,8 @@ module.exports = {
         lastUpdated: true,
         lastUpdated: '上次更新',
         logo: '/homepage.png',
-        nav: [{
+        nav: [
+            {
             text: '指南菜单',
             items: [
                 {
@@ -95,7 +96,9 @@ module.exports = {
                     link: 'https://sumingyd.github.io/Anti-Hackintosh-Buyers-Guide/'
                 },
             ]
-        },],
+            },
+            { text: 'QQ群', link: 'https://jq.qq.com/?_wv=1027&k=liYHt5VH' },
+        ],
         sidebar: [{
             title: '简介',
             collapsable: false,
