@@ -79,7 +79,7 @@ module.exports = {
                 link: 'https://sumingyd.github.io/GPU-Buyers-Guide/'
             },
             {
-                text: '无限购买指南',
+                text: '无线购买指南',
                 link: 'https://sumingyd.github.io/Wireless-Buyers-Guide/'
             },
             {
