@@ -1,51 +1,51 @@
-# Why should you USB map
+# 为什么你要USB映射
 
-So the process of USB mapping is defining your ports to macOS and telling it what kind they are, the reasons we want to do this are:
+USB映射的过程是定义你到macOS的端口，并告诉它它们是什么类型，我们想这样做的原因是:
 
-* macOS is very bad at guessing what kind of ports you have
-* Some ports may run below their rated speed(3.1 ports running at 2.0)
-* Some ports may outright not work
-* Bluetooth not working
-* Certain services like Handoff may not work correctly
-* Sleep may break
-* Broken Hot-Plug
-* Even data corruption from `XhciPortLimit`
+* macOS很不擅长猜测你有什么样的端口
+* 一些端口可能会低于其额定速度(3.1端口运行在2.0)
+* 有些端口可能完全不能工作
+* 蓝牙无法使用
+* 某些服务，如切换可能无法正常工作
+* 睡眠可能会中断
+* 热插拔损坏
+* 甚至是来自`XhciPortLimit`的数据损坏
 
-So now that you know why you should USB map, we can now talk about technical info of USB mapping. This is a section you cannot skip, otherwise all info below will seem like a very broken Russian translation written by a very drunk slav.
+所以现在你知道为什么你应该USB映射，我们现在可以谈谈USB映射的技术信息。这是一个你不能跳过的部分，否则下面的所有信息将看起来像是一个醉酒的斯拉夫人写的一个非常蹩脚的俄语翻译。
 
-So with USB, we need to understand not all ports are the same and that some ports are actually hiding other ports within them! What I mean by this is the following:
+因此，对于USB，我们需要了解并非所有端口都是相同的，有些端口实际上隐藏了其他端口!我的意思如下:
 
-* A USB 3.0 port is actually seen as 2 ports to macOS: a USB 2.0 **and** USB 3.0
-* This is also how USB can keep its backwards compatibility, as all USB 3.0 devices **must** support USB 2.0
+* 一个USB 3.0端口实际上可以看作到macOS的两个端口:一个USB 2.0 **和**一个USB 3.0
+* 这也是USB保持向后兼容性的方式，因为所有USB 3.0设备**必须**支持USB 2.0
 
-Now let's look at a diagram of a USB port to better understand this:
+现在让我们看一下USB端口的图，以便更好地理解这一点:
 
 ![Image from usb3.com](../images/post-install/usb-md/usb-3.png)
 
-As you can see, the bottom 4 pins are dedicated to USB 2.0 and when the extra 5 pins above are recognized the device will switch to a USB 3.0 mode.
+现在让我们看一下USB端口的图，以便更好地理解这一点:
 
-Now with the basic understanding out of the way, we now have to talk about the dreadful 15 port limit.
+现在有了基本的理解，我们现在要讨论可怕的15端口限制。
 
-## macOS and the 15 Port Limit
+## macOS和15端口限制
 
-Now let me take you back in time to the late 2015's and the release of OS X 10.11, El Capitan. This was an update that established much of what both blesses us and pains us in the community like System Integrity Protection and the 15 port limit.
+现在让我带你回到2015年末OS X 10.11 El Capitan发布的时候。这是一个更新，在社区中建立了许多既让我们高兴又让我们痛苦的东西，如系统完整性保护和15端口限制。
 
-What the 15 port limit is in macOS(then called OS X) is a strict limit of only 15 possible ports per controller, this becomes an issue when we look at the chipset ports included on your motherboard:
+在macOS(当时称为OS X)中，15个端口的限制是严格限制每个控制器只有15个可能的端口，当我们查看主板上包含的芯片组端口时，这就成为一个问题:
 
-* Z170 and newer Chipsets: 26 Ports in total
+* Z170和更新的芯片组:总共26端口
 
-And you may not even have 26 actual ports, but they're still declared in your ACPI tables causing issues as macOS can't tell the difference between a real port and one your firmware writers forgot to remove.
+你甚至可能没有26个实际的端口，但它们仍然在你的ACPI表中声明，这导致了问题，因为macOS无法区分真正的端口和固件作者忘记删除的端口。
 
-> But why did Apple choose 15 ports as the limit?
+> 但是为什么苹果选择15个端口作为限制呢?
 
-Well this gets into a fun subset of computers, the hexadecimal counting system! How this differs from our decimal system is that there are a total of 15 values with the last one being `0xF`. This meant it was just cleaner to stop at 15 than to say expand the port limit to 255(0xFF), and in Apple's eyes it made little sense to have anything above 15 ports as no Macs they supported went over this limit. And if a Mac Pro user added a USB expansion card, it would get it's own 15 port limit.
+这就进入了计算机的一个有趣的子集，十六进制计数系统!它与十进制系统的不同之处在于，一共有15个值，最后一个值是`0xF`。这意味着，比起将端口限制扩展到255(0xFF)，停止在15要好得多。在苹果看来，端口超过15是没有意义的，因为他们支持的mac都没有超过这个限制。如果Mac Pro用户增加一个USB扩展卡，它就会有自己的15端口限制。
 
-And now when we take into account the quirk `XhciPortLimit`, you can see *why* data corruption can happen. As we're pushing past the 0xF limit and going into someone else's space. So avoid this quirk when possible.
+现在当我们考虑怪异的`XhciPortLimit`时，你可以看到**为什么**会发生数据损坏。当我们超过0xF极限，进入其他人的空间时。所以，尽可能避免这种怪癖。
 
-* Note: While the name `XhciPortLimit` may seem that it's limiting the number of XHCI ports, it's in-fact patching the XHCI Port Limit to a higher value.
+* 注意:虽然`XhciPortLimit`这个名称看起来似乎是在限制XHCI端口的数量，但实际上它是在为XHCI端口限制打补丁，使其达到更高的值。
 
-> What about USB hubs?
+> 那么USB集线器呢?
 
-USB Hubs attached to one of your USB controller's ports have a different kind of port limit. In total, a single USB port can be split into 127 ports. This includes USB hubs attached to USB hubs
+连接到USB控制器端口的USB集线器有一种不同的端口限制。总的来说，一个USB端口可以拆分为127个端口。这包括USB集线器连接到USB集线器
 
-## Now with the backstory done, let's head to [System Preparations](./system-preparation.md)
+## 现在背景故事已经完成，让我们前往[系统准备](./system-preparation.md)

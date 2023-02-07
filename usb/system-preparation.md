@@ -1,35 +1,33 @@
-# System Preparation
+# 系统准备
 
 Table of Contents:
 
-* [System Preparation](#system-preparation)
-* [Checking what renames you need](#checking-what-renames-you-need)
-* [Parting ways](#parting-ways)
+[[toc]]
 
-So before we can USB map, we need to set a couple things:
+所以在我们进行USB映射之前，我们需要设置一些事情:
 
-* [USBInjectAll](https://github.com/Sniki/OS-X-USB-Inject-All/releases) under both EFI/OC/Kexts and config.plist -> Kernel -> Add
-  * We need this kext to make sure any ports not defined in ACPI will still show up in macOS, note that this *shouldn't* be required on Skylake and newer as the USB ports are defined within ACPI.
-    * Because OEMs don't always include the ports even on newer systems, we recommend all Intel users use USBInjectAll until properly mapped.
-  * Note that this **does not work on AMD**
+* [USBInjectAll](https://github.com/Sniki/OS-X-USB-Inject-All/releases) 添加到在 EFI/OC/Kexts 和 config.plist -> Kernel -> Add
+  * 我们需要这个kext来确保任何没有在ACPI中定义的端口仍然会在macOS中显示，请注意，在Skylake和更新的系统中*不需要*这一点，因为USB端口是在ACPI中定义的。
+    * 因为oem并不总是包括端口，即使在较新的系统上，我们建议所有英特尔用户使用USBInjectAll，直到正确映射。
+  * 注意，这个**不能在AMD**上工作
 * config.plist -> Kernel -> Quirks -> XhciPortLimit -> True
-  * So we can temporally get around the 15 port limit to map our ports
+  * 所以我们可以暂时绕过15个端口的限制来映射我们的端口
 * config.plist -> ACPI -> Patch -> EHCI and XHCI ACPI renames
 
-The reason we need these ACPI renames are due to conflicting with Apple's own USB map, fun fact even Apple has to USB map as well! You can actually find Apple's USB map within IOUSBHostFamily.kext -> PlugIns -> AppleUSBHostPlatformProperties.kext in Catalina, though newer Macs actually port map with their ACPI tables instead.
+我们需要这些ACPI重命名的原因是由于与苹果自己的USB映射冲突，有趣的是，即使苹果也有USB映射!你实际上可以在Catalina的IOUSBHostFamily kext -> PlugIns -> AppleUSBHostPlatformProperties.kext中找到苹果的USB地图，虽然较新的mac实际上与他们的ACPI表端口地图代替。
 
-SMBIOSes that **do not** need the ACPI renames:
+不需要ACPI重命名的smbios:
 
-* iMac18,x and newer
-* MacPro7,1 and newer
-* Macmini8,1 and newer
-* MacBook9,x  and newer
-* MacBookAir8,x  and newer
-* MacBookPro13,x and newer
+* iMac18,x 及更新版本
+* MacPro7,1 及更新版本
+* Macmini8,1 及更新版本
+* MacBook9,x  及更新版本
+* MacBookAir8,x  及更新版本
+* MacBookPro13,x 及更新版本
 
-And so with older SMBIOSes(one's not listed above), we need to make sure their port map does not attach while we're trying to USB map ourselves. Else some ports may disappear, and please check you do have these ports in your ACPI tables **before** applying these patches as we don't want to patch the wrong devices. If you do find your USB controller needs renaming, write down their original names before the rename as this will make USB mapping down the road a bit easier:
+因此，对于较旧的SMBIOSes(上面没有列出)，我们需要确保它们的端口映射不连接，而我们尝试自己的USB映射。还有一些端口可能会消失，**在**应用这些补丁之前，请检查您的ACPI表中是否有这些端口，因为我们不想给错误的设备打补丁。如果你发现你的USB控制器需要重命名，在重命名之前写下它们的原始名称，这将使USB映射过程更容易:
 
-* **XHC1 to SHCI**: Needed for Skylake and older SMBIOS
+* **XHC1 to SHCI**: Skylake和较旧的SMBIOS需要
 
 | Key | Type | Value |
 | :--- | :--- | :--- |
@@ -43,7 +41,7 @@ And so with older SMBIOSes(one's not listed above), we need to make sure their p
 | TableLength | Number | <0> |
 | TableSignature | Data | <> |
 
-* **EHC1 to EH01**: Needed for Broadwell and older SMBIOS
+* **EHC1 to EH01**: Broadwell和更老版本SMBIOS需要
 
 | Key | Type | Value |
 | :--- | :--- | :--- |
@@ -57,7 +55,7 @@ And so with older SMBIOSes(one's not listed above), we need to make sure their p
 | TableLength | Number | <0> |
 | TableSignature | Data | <> |
 
-* **EHC2 to EH02**: Needed for Broadwell and older SMBIOS
+* **EHC2 to EH02**: Broadwell和更老版本SMBIOS需要
 
 | Key | Type | Value |
 | :--- | :--- | :--- |
@@ -71,17 +69,17 @@ And so with older SMBIOSes(one's not listed above), we need to make sure their p
 | TableLength | Number | <0> |
 | TableSignature | Data | <> |
 
-## Checking what renames you need
+## 检查你需要的重命名
 
-So with renames it's pretty easy to find out, first figure out what SMBIOS you're using(can be found in your config.plist under `PlatformInfo -> Generic -> SystemProductName`) and match figure out whether you even need a USB map:
+因此，通过重命名，很容易找到你使用的SMBIOS(可以在你的config.plist中找到`PlatformInfo -> Generic -> SystemProductName`)，并匹配确定你是否需要USB映射:
 
-SMBIOS needing only XHC1 rename:
+SMBIOS 只需要 XHC1 重命名:
 
 * iMacPro1,1
-* iMac17,x and older
+* iMac17,x 和更旧的
 * MacBookAir7,x
 
-SMBIOS needing XHC1 and EHC1 rename:
+SMBIOS 需要 XHC1 and EHC1 重命名:
 
 * MacPro6,1
 * Macmini7,1
@@ -89,49 +87,49 @@ SMBIOS needing XHC1 and EHC1 rename:
 * MacBookAir6,x
 * MacBookPro12,x
 
-SMBIOS needing XHC1, EHC1 and EHC2 renames:
+SMBIOS 需要 XHC1, EHC1 和 EHC2 重命名:
 
-* iMac16,x and older
-* MacPro5,1 and older
-* Macmini6,x and older
-* MacBookAir5,x  and older
-* MacBookPro11,x and older
+* iMac16,x 和更旧的
+* MacPro5,1 和更旧的
+* Macmini6,x 和更旧的
+* MacBookAir5,x  和更旧的
+* MacBookPro11,x 和更旧的
 
-Now that we know what renames our SMBIOS need, we can next check the names of our USB controllers.
+现在我们知道了SMBIOS需要什么重命名，接下来可以检查USB控制器的名称。
 
-### Checking IOService
+### 查看IOService
 
-Let's take XHC1 and execute the following command:
+让我们以XHC1为例，执行以下命令:
 
 ```sh
 ioreg -l -p IOService -w0 | grep -i XHC1
 ```
 
-If you see this, you need a rename: |  If you see this, you do not need a rename:
+如果你看到这个，你需要重命名: |  如果你看到这个，你不需要重命名:
 :-------------------------:|:-------------------------:
 ![](../images/system-preperation-md/ioreg-name.png)  |  ![](../images/system-preperation-md/no-rename-needed.png)
 
-Repeat this step for all the other relevant conflicting devices (e.g. EHC1, EHC2) as listed in the table above for your model.
+对所有其他相关的冲突设备(例如EHC1, EHC2)重复此步骤，如表中列出的您的型号。
 
 ```sh
 ioreg -l -p IOService -w0 | grep -i EHC1
 ioreg -l -p IOService -w0 | grep -i EHC2
 ```
 
-**If nothing returns(like with the right image)**, you don't need any renames.
+**如果没有返回任何内容(比如正确的图像)**，则不需要任何重命名。
 
-**If one of the 3 entries return(like with the left image)**, you'll need a rename for whatever returns.
+**如果返回了3个条目中的一个(如左图所示)**，则需要为返回的内容重命名。
 
-If you're in the latter camp, you'll now want to add the needed ACPI renames to your config.plist -> ACPI -> Patch, you can find a pre-made file here(note that you'll need to enable the ones you need):
+如果你是后者，你现在想要添加所需的ACPI重命名到你的 config.plist -> ACPI -> Patch,您可以在这里找到一个预先制作的文件(注意，您需要启用您需要的那些):
 
 * **[usb-rename.plist](https://github.com/dortania/OpenCore-Post-Install/blob/master/extra-files/usb-rename.plist)**
-  * Simply copy over the required patches to your config.plist
+  * 只需复制所需的补丁到您的config.plist
 
-# Parting ways
+# 分型方法
 
-But now we must part into 2 sections, depending on which hardware you have:
+但现在我们必须分成两部分，这取决于你有什么硬件:
 
-* [Intel USB Mapping](../usb/intel-mapping/intel.md)
-  * A more automated process, Intel only however
-* [Manual USB Mapping](../usb/manual/manual.md)
-  * More step by step process, and is the only way to map AMD and 3rd party USB controllers properly.
+* [Intel USB 映射](../usb/intel-mapping/intel.md)
+  * 一个更自动化的过程，不过只适用于英特尔
+* [手动 USB 映射](../usb/manual/manual.md)
+  * 更多的一步一步的过程，这是正确映射AMD和第三方USB控制器的唯一方法。
