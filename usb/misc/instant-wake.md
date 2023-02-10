@@ -1,34 +1,34 @@
-# GPRW/UPRW/LANC Instant Wake Patch
+# GPRW/UPRW/LANC即时唤醒补丁
 
-Similar idea to the "Fixing Shutdown/Restart" section, macOS will instant wake if either USB or power states change while sleeping. To fix this we need to reroute the GPRW/UPRW/LANC calls to a new SSDT, verify you have instant wake issues before trying the below.
+与“修复关机/重启”部分类似，如果睡眠期间USB或电源状态发生变化，macOS将立即唤醒。为了解决这个问题，我们需要将GPRW/UPRW/LANC调用重新路由到一个新的SSDT，在尝试以下操作之前，请验证您是否存在即时唤醒问题。
 
-Best way to check:
+最好的检查方法:
 
 ```sh
 pmset -g log | grep -e "Sleep.*due to" -e "Wake.*due to"
 ```
 
-And generally you'll get results like these:
+通常你会得到这样的结果:
 
 * `Wake [CDNVA] due to GLAN: Using AC`
-  * Generally caused by WakeOnLAN enabled, try to disable this option first in the BIOS
-  * If WOL wasn't the issue, you can try the below patches
+  * 通常是由启用WakeOnLAN引起的，请首先在BIOS中禁用此选项
+  * 如果不是WOL的问题，你可以尝试下面的补丁
 * `Wake [CDNVA] due to HDEF: Using AC`
-  * Similar to the GLAN issue
+  * 类似于GLAN问题
 * `Wake [CDNVA] due to XHC: Using AC`
-  * Generally caused by WakeOnUSB enabled, try to disable this option first in the BIOS
-  * GPRW patch is likely needed
+  * 通常是由于启用了WakeOnUSB引起的，请首先在BIOS中禁用此选项
+  * 可能需要GPRW补丁
 * `DarkWake from Normal Sleep [CDNPB] : due to RTC/Maintenance Using AC`
-  * Generally caused by PowerNap
+  * 一般由小睡引起
 * `Wake reason: RTC (Alarm)`
-  * Generally caused by an app waking the system, quitting said app before you sleep should fix it
+  * 通常是由应用程序唤醒系统引起的，在睡觉前退出该应用程序应该可以解决这个问题
 
-**Do not use all these patches at once**, look through your DSDT and see what you have:
+**不要一次使用所有这些补丁**，查看你的DSDT，看看你有哪些补丁:
 
 | SSDT | ACPI Patch | Comments |
 | :--- | :--- | :--- |
-| [SSDT-GPRW](https://github.com/dortania/OpenCore-Post-Install/blob/master/extra-files/SSDT-GPRW.aml) | [GPRW to XPRW Patch](https://github.com/dortania/OpenCore-Post-Install/blob/master/extra-files/GPRW-Patch.plist) | Use this if you have `Method (GPRW, 2` in your ACPI |
-| [SSDT-UPRW](https://github.com/dortania/OpenCore-Post-Install/blob/master/extra-files/SSDT-UPRW.aml) | [UPRW to XPRW Patch](https://github.com/dortania/OpenCore-Post-Install/blob/master/extra-files/UPRW-Patch.plist) | Use this if you have `Method (UPRW, 2` in your ACPI |
-| [SSDT-LANC](https://github.com/dortania/OpenCore-Post-Install/blob/master/extra-files/SSDT-LANC.aml) | [LANC to XPRW Patch](https://github.com/dortania/OpenCore-Post-Install/blob/master/extra-files/LANC-Patch.plist) | Use this if you have  `Device (LANC)` in your ACPI |
+| [SSDT-GPRW](https://github.com/dortania/OpenCore-Post-Install/blob/master/extra-files/SSDT-GPRW.aml) | [GPRW to XPRW Patch](https://github.com/dortania/OpenCore-Post-Install/blob/master/extra-files/GPRW-Patch.plist) | 如果你的ACPI中有`Method (GPRW, 2`，请使用它 |
+| [SSDT-UPRW](https://github.com/dortania/OpenCore-Post-Install/blob/master/extra-files/SSDT-UPRW.aml) | [UPRW to XPRW Patch](https://github.com/dortania/OpenCore-Post-Install/blob/master/extra-files/UPRW-Patch.plist) | 如果你的ACPI中有`Method (UPRW, 2`，请使用此方法 |
+| [SSDT-LANC](https://github.com/dortania/OpenCore-Post-Install/blob/master/extra-files/SSDT-LANC.aml) | [LANC to XPRW Patch](https://github.com/dortania/OpenCore-Post-Install/blob/master/extra-files/LANC-Patch.plist) | 如果你的ACPI中有`Device (LANC)`，请使用它 |
 
-ACPI Patches and SSDTs courtesy of [Rehabman](https://www.tonymacx86.com/threads/guide-using-clover-to-hotpatch-acpi.200137/), [1Revenger1](https://github.com/1Revenger1) and [Fewtarius](https://github.com/dortania/laptop-guide)
+ACPI补丁和SSDTs由 [Rehabman](https://www.tonymacx86.com/threads/guide-using-clover-to-hotpatch-acpi.200137/), [1Revenger1](https://github.com/1Revenger1) 和 [Fewtarius](https://github.com/dortania/laptop-guide) 提供

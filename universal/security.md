@@ -1,14 +1,14 @@
-# Security and FileVault
+# 安全性和FileVault
 
-So something that makes OpenCore truly special is how it's been built with security in mind which is quite rare especially in the Hackintosh community. Well here we'll be going through and setting up some of OpenCore's great Security features:
+所以让OpenCore真正与众不同的是它在构建时就考虑到了安全性，这在Hackintosh社区中是非常罕见的。在这里，我们将介绍并设置一些OpenCore的伟大安全功能:
 
 * [**FileVault**](./security/filevault.md)
-  * Apple's built-in drive encryption
+  * 苹果内置的硬盘加密
 * [**Vault**](./security/vault.md)
-  * OpenCore's semi-secure boot, used for snapshotting OpenCore so no unwanted changes happen
+  * OpenCore的半安全引导，用于对OpenCore进行快照，以便不会发生不必要的更改
 * [**ScanPolicy**](./security/scanpolicy.md)
-  * OpenCore's drive policy, determines what types of disks show up in OpenCore's boot menu
+  * OpenCore的驱动器策略，确定在OpenCore的启动菜单中显示什么类型的磁盘
 * [**OpenCore Password Setup**](./security/password.md)
-  * Enable password in OpenCore boot menu
+  * 在OpenCore启动菜单中启用密码
 * [**Apple Secure Boot**](./security/applesecureboot.md)
-  * Apple's variant of secure boot in the macOS kernel
+  * 苹果在macOS内核中的安全引导变种
