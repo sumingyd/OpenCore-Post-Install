@@ -1,12 +1,12 @@
-# Fixing iMessage and other services with OpenCore
+# 使用OpenCore修复iMessage和其他服务
 
-This page is for those having iMessage and other iServices issues, this is a very basic guide so will not go as in-depth into the issues as some other guides. This specific guide is a translation and reinterpretation of the AppleLife Guide on fixing iServices: [Как завести сервисы Apple - iMessage, FaceTime, iCloud](https://applelife.ru/posts/727913).
+这个页面是为那些有iMessage和其他iServices问题的人准备的，这是一个非常基本的指南，所以不会像其他一些指南那样深入讨论这些问题。本指南是对AppleLife修复服务指南的翻译和重新解释: [Как завести сервисы Apple - iMessage, FaceTime, iCloud](https://applelife.ru/posts/727913).
 
-**Your Apple ID is the single most influential factor in using iServices.**
+**你的Apple ID是使用iServices最具影响力的因素**
 
-If you have existing Apple products in your account, such as an iPhone, you should have no issues whatsoever using a generated serial set. However, if you recently created an account, that does not have any existing Apple hardware or App Store purchases, you may be required to call Apple once you have attemped logging in.
+如果你的账户中有现有的苹果产品，比如iPhone，那么使用生成的串行集应该不会有任何问题。但是，如果你最近创建了一个账户，没有任何现有的苹果硬件或应用商店购买，你可能需要在尝试登录后打电话给苹果。
 
-The following items will be created below and are required to use iServices:
+下面将创建以下项目，这是使用iServices所必需的:
 
 * MLB
 * ROM*
@@ -14,29 +14,29 @@ The following items will be created below and are required to use iServices:
 * SystemSerialNumber
 * SystemUUID
 
-::: tip NOTE
+::: tip 提示
 
-For ROM, we use the MAC Address of the network interface, lowercase, and without `:`.
+对于ROM，我们使用网络接口的MAC地址，小写，不含`:`。
 
 :::
 
-**Note**: You and you alone are responsible for your AppleID, read the guide carefully and take full responsibility if you screw up. Dortania and other guides are not held accountable for what **you** do.
+**注意**:你和你自己对你的AppleID负责，仔细阅读指南，如果你搞砸了，承担全部责任。Dortania和其他指南不会对**你**做的事情负责。
 
-## Using GenSMBIOS
+## 使用GenSMBIOS
 
-Download [GenSMBIOS](https://github.com/corpnewt/GenSMBIOS) and select option 1 to download MacSerial and next option 3 to generate some new serials. What we're looking for is a valid serial that currently has no registered purchase date.
+下载[GenSMBIOS](https://github.com/corpnewt/GenSMBIOS)并选择选项1下载MacSerial，选择下一个选项3生成一些新的series。我们要找的是一个没有注册购买日的有效序列号。
 
-Tip: `iMacPro1,1 10` will print 10 serials, this will save you some time on generating
+提示: `iMacPro1,1 10` 将输出10个串行，这将节省您生成的时间
 
 ![](../images/post-install/iservices-md/serial-list.png)
 
-## Using macserial
+## 使用macserial
 
-This is for Linux users and an alternative to using GenSMBIOS.
+这是针对Linux用户的，也是使用GenSMBIOS的另一种选择。
 
-Generate a new Serial and Board Serial (MLB) for your model.
+为你的型号生成一个新的 Serial 和 Board Serial (MLB)。
 
-To generate this you will need macserial.
+要生成它，你需要macserial。
 
 You can download the [latest release of OpenCorePkg from here.](https://github.com/acidanthera/OpenCorePkg/releases)
 
