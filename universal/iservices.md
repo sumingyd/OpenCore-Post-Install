@@ -38,9 +38,9 @@
 
 要生成它，你需要macserial。
 
-You can download the [latest release of OpenCorePkg from here.](https://github.com/acidanthera/OpenCorePkg/releases)
+您可以从这里下载[OpenCorePkg的最新版本](https://github.com/acidanthera/OpenCorePkg/releases)
 
-Or compile the development [macserial](https://github.com/acidanthera/OpenCorePkg/tree/master/Utilities/macserial) from source.
+或者从源代码编译开发[macserial](https://github.com/acidanthera/OpenCorePkg/tree/master/Utilities/macserial)
 
 ```bash
 git clone --depth 1 https://github.com/acidanthera/OpenCorePkg.git
@@ -49,15 +49,15 @@ make
 chmod +x ./macserial
 ```
 
-Find your **SystemProductName** in your config.plist file. That is your model number.
+在你的config.plist文件中找到你的**SystemProductName**。那是你的型号。
 
-Replace `"iMacPro1,1"` below with SystemProductName in your config.plist.
+用config.plist中的SystemProductName替换下面的`"iMacPro1,1"`。
 
 ```bash
 ./macserial --num 1 --model "iMacPro1,1" 
 ```
 
-Example output:
+示例输出:
 
 ```bash
 $ ./macserial \
@@ -66,53 +66,53 @@ Warning: arc4random is not available!
 C02V7UYGHX87 | C02733401J9JG36A8
 ```
 
-The value on the left is your **Serial number**.
-The value on the right is your **Board Serial (MLB)**.
+左边的值是你的**Serial number**。
+右边的值是你的**Board Serial (MLB)**。
 
-## Choose a MAC Address
+## 选择MAC地址
 
-Select a MAC Address with an Organizationally Unique Identifier (OUI) that corresponds to a real Apple, Inc. interface.
+选择一个具有组织唯一标识符(OUI)的MAC地址，该标识符对应于真实的Apple, Inc.接口。
 
-See the following list:
+请看下面的列表:
 
 [https://gitlab.com/wireshark/wireshark/-/raw/master/manuf](https://gitlab.com/wireshark/wireshark/-/raw/master/manuf)
 
-For example:
+例如:
 
 ```
 00:16:CB    Apple   Apple, Inc.
 ```
 
-Make up the last 3 octets.
+组成最后3个八进制。
 
-For example:
+例如:
 
 ```
 00:16:CB:00:11:22
 ```
 
-## Derive the corresponding ROM Value
+## 获得相应的ROM值
 
-ROM is calculated from your MAC Address.
+ROM是从你的MAC地址计算出来的。
 
-Lowercase your MAC Address, and remove each colon `:` between the octets.
+ROM是从你的MAC地址计算出来的。
 
-For example:
+例如:
 
 **MAC:** `00:16:CB:00:11:22`
 
 **ROM:** `0016cb001122`
 
-## Generate an UUID
+## 生成UUID
 
-Type `uuidgen` in Terminal
+在终端中输入`uuidgen`
 
 ```bash
 $ uuidgen
 976AA603-75FC-456B-BC6D-9011BFB4968E
 ```
 
-Then simply replace those values in your config.plist:
+然后简单地在config.plist中替换这些值:
 
 |Key|Data|
 |---|---|
@@ -123,7 +123,7 @@ Then simply replace those values in your config.plist:
 |SystemSerialNumber|`C02V7UYGHX87`|
 |SystemUUID|`976AA603-75FC-456B-BC6D-9011BFB4968E`|
 
-It should look something like this:
+它应该看起来像这样:
 
 ```xml
     <key>MLB</key>
@@ -140,119 +140,119 @@ It should look something like this:
     <string>976AA603-75FC-456B-BC6D-9011BFB4968E</string>
 ```
 
-NOTE: If you have trouble using the App Store, you [may need to fix En0](#fixing-en0), depending on your hardware setup.
+注意:如果你在使用App Store时有问题，你[可能需要修复En0](#fixing-en0)，这取决于你的硬件设置。
 
-Brand new Apple ID's will almost certainly not work. Having other real devices in your account almost always works.
+全新的Apple ID几乎肯定无法使用。在你的账户中有其他真正的设备几乎总是有效的。
 
-If you see a [support warning, see below](#customer-code-error).
+如果您看到一个[支持警告，请参见下面](#customer-code-error)。
 
-## Serial Number Validity
+## 序列号有效期
 
-Now enter the serial into the [Apple Check Coverage page](https://checkcoverage.apple.com/), you will get 1 of 3 responses:
+现在将串行输入[苹果检查覆盖页面](https://checkcoverage.apple.com/)，你将得到3个答复之一:
 
-We're sorry, we're unable to check coverage for this serial number. |  Valid Purchase Date | Purchase Date not Validated
+很抱歉，我们无法查询这个序列号的覆盖范围。 |  有效的购买日期 | 购买日期未验证
 :-------------------------:|:-------------------------:|:-------------------------:
 ![](../images/post-install/iservices-md/not-valid.png) | ![](../images/post-install/iservices-md/valid.png) |  ![](../images/post-install/iservices-md/no-purchase.png)
 
-::: tip
+::: tip 提示
 
-Copy and paste the serial number, as invalidly formatted serials will also return the "We're sorry, we're unable to check coverage for this serial number."
+复制并粘贴序列号，因为无效格式的序列号也将返回“我们很抱歉，我们无法检查这个序列号的覆盖范围。”
 
 :::
 
-This first one is what we're after (you can also use the third one, but it is not recommended as there may be a chance of a conflict with an actual Mac). Now we can translate the rest of the values into our config.plist -> PlatformInfo -> Generic:
+第一个是我们想要的(你也可以使用第三个，但不建议使用，因为可能会与实际的Mac发生冲突)。现在我们可以将其余的值转换为config.plist -> PlatformInfo -> Generic:
 
 * Type = SystemProductName
 * Serial = SystemSerialNumber
 * Board Serial = MLB
 * SmUUID = SystemUUID
 
-::: tip NOTE
+::: tip 注意
 
-Although the first option works for most, do note though if you've had a bad track record with Apple/iServices you many need one that's "Purchase Date not Validated". Otherwise there may be suspicion
-
-:::
-
-::: warning
-
-Using a "Purchase Date not Validated:" serial can cause issues down the line if another machine of the same serial ever gets activated. For initial setup it can help alleviate issues with your account but in the long run an invalid serial can be a safer choice.
+虽然第一个选项适用于大多数情况，但请注意，如果你在Apple/iServices上有糟糕的记录，你可能需要一个“购买日期未验证”的选项。否则就会产生怀疑
 
 :::
 
-::: tip
+::: warning 警告
 
-Checking too many serials may result in you becoming ratelimited. To bypass this limitation you can try clearing your cookies or changing your IP.
+使用“购买日期未验证:”系列可能会在同一系列的另一台机器被激活时引起问题。对于初始设置，它可以帮助缓解您的帐户问题，但从长远来看，无效的串行可能是一个更安全的选择。
 
 :::
 
-## Fixing en0
+::: tip 提示
 
-To start, grab [Hackintool](https://github.com/headkaze/Hackintool) and head to System -> Peripherals (Info -> Misc on older versions of Hackintool)
+检查太多的序列可能会导致速率受限。要绕过此限制，您可以尝试清除cookie或更改IP。
 
-Here under Network Interfaces (network card icon), look for `en0` under `BSD` and check whether the device has a check mark under built-in. If there is a check mark, skip to the Fixing ROM section otherwise continue reading.
+:::
 
-* **Note**: `en0` can be either Wifi, ethernet or even Thunderbolt. The type doesn't matter, just that it's present and marked as built-in.
+## 修复 en0
 
-### What if I don't have En0 at all?!?
+首先，获取[Hackintool](https://github.com/headkaze/Hackintool)并前往系统 ->外设(信息 -> 杂项 在旧版本的Hackintool)
 
-Well, we'll want to reset the macOS networking settings so it can build the interfaces fresh; open Terminal and run the following:
+在网络接口(网卡图标)下，在“BSD”下查找“en0”，并检查设备是否在“内置”下有复选标记。如果有一个复选标记，跳过到修复ROM部分，否则继续阅读。
+
+* **注意**:`en0`可以是Wifi、ethernet甚至Thunderbolt。类型并不重要，只要它存在并标记为内置即可。
+
+### 如果我根本没有En0怎么办?
+
+好吧，我们要重置macOS的网络设置，这样它就可以重新构建界面;打开终端并运行以下命令:
 
 ```
 sudo rm /Library/Preferences/SystemConfiguration/NetworkInterfaces.plist
 sudo rm /Library/Preferences/SystemConfiguration/preferences.plist
 ```
 
-Once done reboot and check again.
+一旦完成，重启并再次检查。
 
-If this doesn't work, add [NullEthernet.kext](https://bitbucket.org/RehabMan/os-x-null-ethernet/downloads/) and [ssdt-rmne.aml](https://github.com/RehabMan/OS-X-Null-Ethernet/blob/master/ssdt-rmne.aml) to your EFI and config.plist under Kernel -> Add and ACPI -> Add respectively. The SSDT is precompiled so no extra work needed, reminder compiled files have a .aml extension and .dsl can be seen as source code.
+如果这不起作用，添加[NullEthernet.kext](https://bitbucket.org/RehabMan/os-x-null-ethernet/downloads/)和[ssdt-rmne.aml](https://github.com/RehabMan/OS-X-Null-Ethernet/blob/master/ssdt-rmne.aml)分别到您的EFI和config.plist下的Kernel -> add和ACPI -> add。SSDT是预编译的，因此不需要额外的工作，提醒编译后的文件具有.aml扩展名，.dsl可以视为源代码。
 
-### Making en0 show as built-in
+### 使en0显示为内置
 
 ![Find if set as Built-in](../images/post-install/iservices-md/en0-built-in-info.png)
 
-Now head under the PCI tab of Hackintool and export your PCI DeviceProperties, this will create a pcidevices.plist on your desktop
+现在，在Hackintool的PCI选项卡下，导出PCI DeviceProperties，这将在桌面上创建一个pcidevices.plist
 
 ![Export PCI address](../images/post-install/iservices-md/hackintool-export.png)
 
-Now search through the pcidevices.plist and find the PciRoot of your ethernet controller. For us, this would be `PciRoot(0x0)/Pci(0x1f,0x6)`
+现在搜索pcidevices.plist,找到你的PciRoot以太网控制器。对我们来说，这将是`PciRoot(0x0)/Pci(0x1f,0x6)`
 
 ![Copy PciRoot](../images/post-install/iservices-md/find-en0.png)
 
-Now with the PciRoot, go into your config.plist -> DeviceProperties -> Add and apply the property of `built-in` with type `Data` and value `01`
+现在有了PciRoot，进入你的config plist -> DeviceProperties ->添加并应用`built`属性，类型为`Data`，值为`01`
 
 ![Add to config.plist](../images/post-install/iservices-md/config-built-in.png)
 
-## Fixing ROM
+## 修复ROM
 
-This is a section many may have forgotten about but this is found in your config.plist under PlatformInfo -> Generic -> ROM
+T这是一个很多人可能已经忘记的部分，但它可以在你的 config.plist 文件 PlatformInfo -> Generic -> ROM 下看到
 
-To find your actual MAC Address/ROM value, you can find in a couple places:
+要找到实际的MAC地址/ROM值，你可以在以下几个地方找到:
 
 * BIOS
-* macOS: System Preferences -> Network -> Ethernet -> Advanced -> Hardware -> MAC Address
-* Windows: Settings -> Network & Internet -> Ethernet -> Ethernet -> Physical MAC Address
+* macOS: 系统首选项—>网络—>以太网—>高级—>硬件—> MAC地址
+* Windows: 设置->网络和互联网->以太网->以太网->物理MAC地址
 
-* **Note**: en0 can be either Wifi, ethernet or even Thunderbolt, adapt the above example to your situation.
+* **注意**:en0可以是Wifi、以太网甚至Thunderbolt，根据你的情况调整上面的例子。
 
-Some users have even gone as far as using real Apple MAC Address dumps for their config, for this guide we'll be using our real MAC Address but note that this is another option.
+有些用户甚至使用真实的MAC地址转储来配置，在本指南中我们将使用真实的MAC地址，但请注意，这是另一种选择。
 
-When adding this to your config, `c0:7e:bf:c3:af:ff` should be converted to `c07ebfc3afff` as the `Data` type cannot accept colons (`:`).
+当将其添加到你的配置中时，`c0:7e:bf:c3:af:ff`应该被转换为`c07ebfc3afff`，因为`Data`类型不能接受冒号(`:`)。
 
 ![](../images/post-install/iservices-md/config-rom.png)
 
-## Verifying NVRAM
+## 验证NVRAM
 
-Something that many forget about iServices is that NVRAM is crucial to getting it working correctly, the reason being is that iMessage keys and such are stored in NVRAM. Without NVRAM, iMessage can neither see nor store keys.
+许多人忘记了NVRAM对iServices的正确工作至关重要，原因是iMessage密钥等都存储在NVRAM中。如果没有NVRAM, iMessage既不能看到也不能存储密钥。
 
-So we'll need to verify NVRAM works, regardless if "it should work" as some firmwares can be more of a pain than others.
+因此，我们需要验证NVRAM是否可以工作，不管它是否“应该工作”，因为某些固件可能比其他固件更麻烦。
 
-Please refer to the [Emulated NVRAM](../misc/nvram.md) section of the OpenCore Guide for both testing if you have working NVRAM and emulating it if you don't.
+请参阅OpenCore指南的[模拟NVRAM](../misc/NVRAM.md)部分，以进行测试(如果您有可用的NVRAM)和模拟(如果没有)。
 
-## Clean out old attempts
+## 清除旧的尝试
 
-This is important for those who've tried setting up iMessage but failed, to start make sure your NVRAM has been cleared. You can enable the option in the boot picker in your config under config.plist -> Misc -> Security -> AllowNvramReset.
+对于那些尝试设置iMessage但失败的人来说，这很重要，首先要确保你的NVRAM已被清除。您可以在config plist -> Misc -> Security -> AllowNvramReset下启用AllowNvramReset选项。
 
-Next open terminal and run the following:
+打开终端，运行如下命令:
 
 ```
 bash
@@ -273,21 +273,21 @@ sudo rm -rf ~/Library/Preferences/com.apple.security*
 sudo rm -rf ~/Library/Messages
 ```
 
-## Verifying your work one last time
+## 最后一次验证你的工作
 
-Grab macserial from the [latest OpenCore release](https://github.com/acidanthera/OpenCorePkg/releases) and run the following:
+从[最新的OpenCore版本](https://github.com/acidanthera/OpenCorePkg/releases)抓取macserial并运行以下命令:
 
 ```
 path/to/macserial -s
 ```
 
-This will provide us with a full rundown of our system, verify that what is presented matches up with your work.
+这将为我们提供系统的完整概要，验证所呈现的内容与您的工作相匹配。
 
-## Cleaning up your AppleID
+## 清理你的AppleID
 
-* Remove all devices from your AppleID: [Manage your devices](https://appleid.apple.com/account/manage)
-* Enable 2 Factor-Auth
-* Remove all iServices from Keychain, some examples:
+* 从你的AppleID中删除所有设备:[管理你的设备](https://appleid.apple.com/account/manage)
+* 启用2 Factor-Auth
+* 从Keychain中删除所有iServices，例如:
 
 ```
 ids: identity-rsa-key-pair-signature-v1
@@ -299,23 +299,23 @@ ids: personal-public-key-cache
 iMessage Encryption Key
 iMessage Signing Key
 com.apple.facetime: registrationV1
-etc ...
+等 ...
 ```
 
-And a final layer of precaution is to make a new AppleID to play with, this makes sure that if you do end up blacklisting your account that it's not your main.
+最后一层预防措施是创建一个新的AppleID，以确保如果你最终将自己的账户列入黑名单，它不是你的主要账户。
 
-::: tip
+::: tip 提示
 
-Adding a payment card to the account and having a decent amount of purchases can also help. While not concrete, you can think of an AppleID as a credit score where the better an Apple customer you are the more likely they won't have activation issues or get an easier pass with Apple Support
+给账户加一张支付卡，有足够的购买量也会有所帮助。虽然不是具体的，但你可以把AppleID看作一个信用评分，你是一个越好的苹果用户，他们就越有可能不会出现激活问题，或者更容易获得苹果支持
 
 ::
 
-## Customer Code error
+## 客户代码错误
 
-Well mate, you've done it. You blacklisted your AppleID. The fix is simple but not pretty, **you MUST call [Apple](https://support.apple.com/en-us/HT201232)**. Otherwise, there is no proceeding besides using a new account. Adding a payment card before calling can help legitimize the account so it doesn't seem as much like a bot.
+好吧，伙计，你做到了。你的AppleID列入黑名单。解决方法很简单，但并不漂亮，**你必须打电话给[苹果](https://support.apple.com/en-us/HT201232)**。否则，除了使用新帐户之外，没有任何其他程序。在打电话之前添加一张支付卡可以帮助使账户合法化，这样它看起来就不那么像一个机器人了。
 
 ![](../images/post-install/iservices-md/blacklist.png)
 
-* For Apple contacting, there are 2 methods
-  * Apple calls you: [Apple Support](https://getsupport.apple.com/). You must click on Apple ID and then select the iCloud, Facetime & Messages. Now, you should click on Talk to Apple Support Now and type your phone number
-  * You can contact Apple for support and service as well, look for your country in the list and then make a phone call: [Apple Support Phone Numbers](https://support.apple.com/HT201232)
+* 苹果联系方式有两种
+  * Apple打电话给你:[Apple Support](https://getsupport.apple.com/)。你必须点击Apple ID，然后选择iCloud、Facetime和Messages。现在，你应该点击“立即与苹果通话”并输入你的电话号码
+  * 您也可以联系苹果公司寻求支持和服务，在列表中查找您的国家，然后拨打电话:[苹果支持电话号码](https://support.apple.com/HT201232)
