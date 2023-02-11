@@ -7,131 +7,131 @@
 
 * DRM需要支持的dGPU
   * 有关支持的卡，请参阅[GPU购买者指南](https://sumingyd.github.io/GPU-Buyers-Guide/)
-* DRM is broken for iGPU-only systems
-  * This could be fixed with Shiki (now WhateverGreen) til 10.12.2, but broke with 10.12.3
-  * This is due to the issue that our iGPUs don't support Apple's firmware and that our [Management Engine](https://en.wikipedia.org/wiki/Intel_Management_Engine) doesn't have Apple's certificate
-* Working hardware acceleration and decoding
+* 仅igpu系统的DRM损坏
+  * 这个问题可以在10.12.2之前用Shiki(现在的WhateverGreen)修复，但在10.12.3时被破坏了
+  * 这是由于我们的igpu不支持苹果的固件，我们的[管理引擎](https://en.wikipedia.org/wiki/Intel_Management_Engine) 没有苹果的证书
+* 工作硬件加速和解码
 
-## Testing Hardware Acceleration and Decoding
+## 测试硬件加速和解码
 
-So before we can get started with fixing DRM, we need to make sure your hardware is working. The best way to check is by running [VDADecoderChecker](https://i.applelife.ru/2019/05/451893_10.12_VDADecoderChecker.zip):
+因此，在我们开始修复DRM之前，我们需要确保您的硬件是工作的。最好的检查方法是运行 [VDADecoderChecker](https://i.applelife.ru/2019/05/451893_10.12_VDADecoderChecker.zip):
 
 ![](../images/post-install/drm-md/vda.png)
 
-If you fail at this point, there's a couple things you can check for:
+如果你在这一点上失败了，你可以检查以下几点:
 
-* Make sure your hardware is supported
-  * See [GPU Buyers Guide](https://dortania.github.io/GPU-Buyers-Guide/)
-* Make sure the SMBIOS you're running matches with your hardware
-  * Don't use a Mac Mini SMBIOS on a desktop for example, as Mac Minis run mobile hardware and so macOS will expect the same
-* Make sure the iGPU is enabled in the BIOS and has the correct properties for your setup (`AAPL,ig-platform-id` and if needed, `device-id`)
-  * You can either review the DeviceProperties section from the guide or [WhateverGreen's manual](https://github.com/acidanthera/WhateverGreen/blob/master/Manual/FAQ.IntelHD.en.md)
-* Avoid unnecessary ACPI renames, all important ones are handled in WhateverGreen
+* 确保您的硬件支持
+  * 参见[GPU购买指南](https://sumingyd.github.io/GPU-Buyers-Guide/)
+* 确保你正在运行的SMBIOS与你的硬件匹配
+  * 例如，不要在台式机上使用Mac Mini SMBIOS，因为Mac Mini运行的是移动硬件，所以macOS也会有同样的要求
+* 确保iGPU在BIOS中是启用的，并且具有正确的设置属性(`AAPL,ig-platform-id`，如果需要，`device-id`)
+  * 您可以查看指南中的DeviceProperties部分或[WhateverGreen的手册](https://github.com/acidanthera/WhateverGreen/blob/master/Manual/FAQ.IntelHD.en.md)
+* 避免不必要的ACPI重命名，所有重要的重命名都由WhateverGreen处理
   * change GFX0 to IGPU
   * change PEG0 to GFX0
   * change HECI to IMEI
-  * [etc](https://github.com/dortania/OpenCore-Install-Guide/blob/master/clover-conversion/Clover-config.md)
-* Make sure Lilu and WhateverGreen are loaded
-  * Make sure not to have any legacy graphics patches present as they've been absorbed into WhateverGreen:
+  * [等](https://github.com/dortania/OpenCore-Install-Guide/blob/master/clover-conversion/Clover-config.md)
+* 确保Lilu和WhateverGreen已加载
+  * 确保没有任何遗留的图形补丁，因为它们已经被合并到WhateverGreen中:
     * IntelGraphicsFixup.kext
     * NvidiaGraphicsFixup.kext
     * Shiki.kext
 
-To check if Lilu and WhateverGreen loaded correctly:
+检查Lilu和WhateverGreen是否正确加载:
 
 ```
 kextstat | grep -E "Lilu|WhateverGreen"
 ```
 
-> Hey one or more of these kexts aren't showing up
+> 这些kext中的一个或多个没有出现
 
-Generally the best place to start is by looking through your OpenCore logs and seeing if Lilu and WhateverGreen injected correctly:
+一般来说，最好的开始是通过查看你的OpenCore日志，看看Lilu和WhateverGreen是否正确注入:
 
 ```
 14:354 00:020 OC: Prelink injection Lilu.kext () - Success
 14:367 00:012 OC: Prelink injection WhateverGreen.kext () - Success
 ```
 
-If it says failed to inject:
+如果它说注射失败:
 
 ```
 15:448 00:007 OC: Prelink injection WhateverGreen.kext () - Invalid Parameter
 ```
 
-Main places you can check as to why:
+你可以查看的主要地方是:
 
-* **Injection order**: Make sure that Lilu is above WhateverGreen in kext order
-* **All kexts are latest release**: Especially important for Lilu plugins, as mismatched kexts can cause issues
+* **注射顺序**:确保Lilu在WhateverGreen上面
+* **所有的kext都是最新版本**:对于Lilu插件尤其重要，因为不匹配的kext可能会导致问题
 
-Note: To setup file logging, see [OpenCore Debugging](https://dortania.github.io/OpenCore-Install-Guide/troubleshooting/debug.html).
+注意:要设置文件日志，请参阅 [OpenCore 调试](https://sumingyd.github.io/OpenCore-Install-Guide/troubleshooting/debug.html).
 
-**Note**: On macOS 10.15 and newer, AppleGVA debugging is disabled by default, if you get a generic error while running VDADecoderChecker you can enable debugging with the following:
+**注**:在macOS 10.15及更新版本上，AppleGVA调试默认是关闭的，如果你在运行VDADecoderChecker时得到一个通用错误，你可以使用以下命令打开调试:
 
 ```
 defaults write com.apple.AppleGVA enableSyslog -boolean true
 ```
 
-And to undo this once done:
+并撤销此操作:
 
 ```
 defaults delete com.apple.AppleGVA enableSyslog
 ```
 
-## Testing DRM
+## 测试DRM
 
-So before we get too deep, we need to go over some things, mainly the types of DRM you'll see out in the wild:
+因此，在我们深入讨论之前，我们需要回顾一些事情，主要是你将在现实中看到的DRM类型:
 
-**FairPlay 1.x**: Software based DRM, used for supporting legacy Macs more easily
+**FairPlay 1.x**: 基于软件的DRM，可以更好地支持legacy mac
 
-* Easiest way to test this is by playing an iTunes movie: [FairPlay 1.x test](https://drive.google.com/file/d/12pQ5FFpdHdGOVV6jvbqEq2wmkpMKxsOF/view)
-  * FairPlay 1.x trailers will work on any configuration if WhateverGreen is properly set up - including iGPU-only configurations. However, FairPlay 1.x *movies* will only play on iGPU-only configurations for around 3-5 seconds, erroring that HDCP is unsupported afterwards.
+* 最简单的测试方法是播放iTunes电影: [FairPlay 1.x test](https://drive.google.com/file/d/12pQ5FFpdHdGOVV6jvbqEq2wmkpMKxsOF/view)
+  * FairPlay 1.x预告片将在任何配置上工作，如果WhateverGreen被正确设置-包括只有igpu的配置。然而，FairPlay 1.x *电影*将只在仅支持igpu的配置上播放大约3-5秒，之后会误以为HDCP不支持。
 
-**FairPlay 2.x/3.x**: Hardware based DRM, found in Netflix, Amazon Prime
+**FairPlay 2.x/3.x**: 基于硬件的DRM，可以在Netflix、Amazon Prime中找到
 
-* There's a couple ways to test:
-  * Play a show in Netflix or Amazon Prime
-  * Play an Amazon Prime trailer: [Spider-Man: Far From Home](https://www.amazon.com/Spider-Man-Far-Home-Tom-Holland/dp/B07TP6D1DP)
-    * Trailer itself does not use DRM but Amazon still checks before playing
-* Note: Requires newer AMD GPU to work (Polaris+)
+* 有几个方法测试:
+  * 在Netflix或Amazon Prime上播放节目
+  * 播放 Amazon Prime 预告片: [蜘蛛侠: 英雄远征](https://www.amazon.com/Spider-Man-Far-Home-Tom-Holland/dp/B07TP6D1DP)
+    * 预告片本身并不使用DRM，但亚马逊仍然会在播放前进行检查
+* 注意:需要更新的AMD GPU才能工作(Polaris+)
 
-**FairPlay 4.x**: Mixed DRM, found on AppleTV+
+**FairPlay 4.x**: 混合DRM，在AppleTV+上找到
 
-* You can open TV.app, choose TV+ -> Free Apple TV+ Premieres, then click on any episode to test without any trial (you do need an iCloud account)
-* Apple TV+ also has a free trial if you want to use it
-* Note: Requires either an absent iGPU (Xeon) or newer AMD GPU to work (Polaris+)
-  * Possible to force FairPlay 1.x when iGPU is absent
+* 您可以打开TV.app，选择TV+ ->免费Apple TV+首映，然后点击任何一集进行测试，无需任何试用(您需要一个iCloud帐户)
+* 如果你想使用Apple TV+，也可以免费试用
+* 注意:需要没有iGPU (Xeon)或更新的AMD GPU工作(Polaris+)
+  * 当iGPU不存在时，可以强制FairPlay 1.x
 
-If everything works on these tests, you have no need to continue! Otherwise, proceed on.
+如果在这些测试中一切正常，则无需继续!否则,继续。
 
-## Fixing DRM
+## 修复DRM
 
-So for fixing DRM we can go down mainly 1 route: patching DRM to use either software or AMD decoding. Vit made a great little chart for different hardware configurations:
+因此，要修复DRM，我们主要可以走一条路:为DRM打补丁，使用软件或AMD解码。Vit为不同的硬件配置制作了一个很棒的小图表:
 
-* [WhateverGreen's DRM chart](https://github.com/acidanthera/WhateverGreen/blob/master/Manual/FAQ.Chart.md)
+* [WhateverGreen的DRM图标](https://github.com/acidanthera/WhateverGreen/blob/master/Manual/FAQ.Chart.md)
 
-So how do you use it? First, identify what configuration you have in the chart (AMD represents GPU, not CPU). The SMBIOS listed (IM = iMac, MM = Mac Mini, IMP = iMac Pro, MP = Mac Pro) is what you should use if you match the hardware configuration. If you don't match any of the configurations in the chart, you're out of luck.
+那么如何使用它呢?首先，确定你在图表中有什么配置(AMD代表GPU，而不是CPU)。列出的SMBIOS (IM = iMac, MM = Mac Mini, IMP = iMac Pro, MP = Mac Pro)是你应该使用的，如果你匹配硬件配置。如果你没有匹配图表中的任何配置，你就不走运了。
 
-Next, identify what Shiki mode you need to use. If there are two configurations for your setup, they will differ in the Shiki flags used. Generally, you want hardware decoding over software decoding. If the mode column is blank, then you are done. Otherwise, you should add `shikigva` as a property to any GPU, using DeviceProperties > Add. For example, if the mode we need to use is `shikigva=80`:
+接下来，确定你需要使用什么Shiki模式。如果您的设置有两种配置，它们将在使用的Shiki标志上有所不同。通常，硬件解码比软件解码更重要。如果mode列为空，则操作完成。否则，你应该使用DeviceProperties > add将`shikigva`作为属性添加到任何GPU。例如，如果我们需要使用的模式是`shikigva=80`:
 
 ![Example of shikigva in Devices Properties](../images/post-install/drm-md/dgpu-path.png)
 
-You can also use the boot argument - this is in the mode column.
+你也可以使用启动参数——它位于mode列中。
 
-Here's one example. If we have an Intel i9-9900K and an RX 560, the configuration would be "AMD+IGPU", and we should be using an iMac or Mac Mini SMBIOS (for this specific configuration, iMac19,1). Then we see there are two options for the configuration: one where the mode is `shikigva=16`, and one with `shikigva=80`. We see the difference is in "Prime Trailers" and "Prime/Netflix". We want Netflix to work, so we'll choose the `shikigva=80` option. Then inject `shikigva` with type number/integer and value `80` into our iGPU or dGPU, reboot, and DRM should work.
+这里有一个例子。如果我们有一个Intel i9-9900K和一个RX 560，配置将是“AMD+IGPU”，我们应该使用iMac或Mac Mini SMBIOS(对于这个特定的配置，iMac19,1)。然后我们看到配置有两个选项:一个是模式为`shikigva=16`，另一个是`shikigva=80`。我们在“Prime预告片”和“Prime/Netflix”中看到了区别。我们希望Netflix能正常工作，所以我们选择`shikigva=80`选项。然后将类型为数字/整数和值为`80`的`shikigva`注入到我们的iGPU或dGPU中，重新启动，DRM应该可以工作了。
 
-Here's another example. This time, We have an Ryzen 3700X and an RX 480. Our configuration in this case is just "AMD", and we should be using either an iMac Pro or Mac Pro SMBIOS. Again, there are two options: no shiki arguments, and `shikigva=128`. We prefer hardware decoding over software decoding, so we'll choose the `shikigva=128` option, and again inject `shikigva` into our dGPU, this time with value `128`. A reboot and DRM works.
+这是另一个例子。这次，我们有一个Ryzen 3700X和一个RX 480。在这种情况下，我们的配置只有“AMD”，我们应该使用iMac Pro或Mac Pro SMBIOS。同样，有两个选项:不设置shiki参数，以及设置`shikigva=128`。我们更喜欢硬件解码而不是软件解码，因此我们将选择`shikigva=128`选项，并再次将`shikigva`注入我们的dGPU，这次的值为`128`。重新启动后DRM开始工作。
 
-**Notes:**
+**注意:**
 
-* You can use [gfxutil](https://github.com/acidanthera/gfxutil/releases) to find the path to your iGPU/dGPU.
+* 你可以使用[gfxutil](https://github.com/acidanthera/gfxutil/releases)找到iGPU/dGPU的路径。
   * `path/to/gfxutil -f GFX0`
-  * `GFX0`: For dGPUs, if multiple installed check IORegistryExplorer for what your AMD card is called
-  * `IGPU`: For iGPU
-* If you inject `shikigva` using DeviceProperties, ensure you only do so to one GPU, otherwise WhateverGreen will use whatever it finds first and it is not guaranteed to be consistent.
-* IQSV stands for Intel Quick Sync Video: this only works if iGPU is present and enabled and it is set up correctly.
-* Special configurations (like Haswell + AMD dGPU with an iMac SMBIOS, but iGPU is disabled) are not covered in the chart. You must do research on this yourself.
-* [Shiki source](https://github.com/acidanthera/WhateverGreen/blob/master/WhateverGreen/kern_shiki.hpp) is useful in understanding what flags do what and when they should be used, and may help with special configurations.
-* For error `VDADecoderCreate failed. err: -12473` in Big Sur, forcing the AMD Decoder(on applicable systems) can help resolve this:
+  * `GFX0`: 表示dGPUs，如果安装了多个，请检查IORegistryExplorer中AMD卡的名称
+  * `IGPU`: 表示IGPU
+* 如果你使用DeviceProperties注入`shikigva`，请确保只对一个GPU执行此操作，否则WhateverGreen将使用它首先找到的任何内容，并且不能保证一致性。
+* IQSV代表英特尔快速同步视频:这仅在iGPU存在并启用并正确设置时有效。
+* 特殊配置(如Haswell + AMD dGPU和iMac SMBIOS，但iGPU是禁用的)不在图表中。你必须自己做研究。
+* [Shiki 来源](https://github.com/acidanthera/WhateverGreen/blob/master/WhateverGreen/kern_shiki.hpp) 有助于理解标志的作用以及何时使用它们，并可能有助于特殊配置。
+* 对于Big Sur下的 `VDADecoderCreate failed. err: -12473` 错误,强制使用AMD解码器(在适用的系统上)可以帮助解决这个问题:
 
     ```sh
     defaults write com.apple.AppleGVA gvaForceAMDAVCDecode -boolean yes
