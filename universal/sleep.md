@@ -229,60 +229,60 @@ sudo pmset lidwake 0
 * 默认RTC是禁用的(而不是使用AWAC)
 * RTC通常与macOS不兼容
 
-To get around the first issue, see here: [Fixing AWAC](https://sumingyd.github.io/Getting-Started-With-ACPI/Universal/awac.html)
+要解决第一个问题，请参阅这里:[修复AWAC](https://sumingyd.github.io/Getting-Started-With-ACPI/Universal/awac.html)
 
-For the second one, it's quite easy to tell you have RTC issues when you either shutdown or restart. Specifically you'll be greeted with a "BIOS Restarted in Safemode" error. To fix this, we'll need to prevent macOS from writing to the RTC regions causing these issues. There are a couple fixes:
+对于第二个问题，当您关闭或重新启动时，很容易告诉您有RTC问题。具体来说，你会看到一个“BIOS重启在安全模式”的错误。为了解决这个问题，我们需要防止macOS向RTC 区域写入数据导致这些问题。这里有几个修复方法:
 
-* DisableRtcChecksum: Prevent writing to primary checksum (0x58-0x59), works with most boards
+* DisableRtcChecksum: 防止写入主校验和(0x58-0x59)，适用于大多数主板
 * `UEFI -> ProtoclOverride -> AppleRtcRam` + `NVRAM -> Add -> rtc-blacklist`
-  * Blacklists certain regions at the firmware level, see [Configuration.pdf](https://github.com/acidanthera/OpenCorePkg/blob/master/Docs/Configuration.pdf) for more info on how to set this up
+  * 在固件级别上黑名单某些区域，参见[Configuration.pdf](https://github.com/acidanthera/OpenCorePkg/blob/master/Docs/Configuration.pdf)关于如何设置的更多信息
 * [RTCMemoryFixup](https://github.com/acidanthera/RTCMemoryFixup) + `rtcfx_exclude=`
-  * Blacklists certain regions at the kernel level, see README for more info on how to setup
+  * 在内核级别将某些区域列入黑名单，参见README了解更多关于如何设置的信息
 
-With some legacy boards, you may actually need to patch your RTC: [Z68 RTC](https://www.insanelymac.com/forum/topic/329624-need-cmos-reset-after-sleep-only-after-login/)
+对于一些legacy的板，你可能需要给你的RTC打补丁:[Z68 RTC](https://www.insanelymac.com/forum/topic/329624-need-cmos-reset-after-sleep-only-after-login/)
 
-### IRQ Conflicts
+### IRQ 冲突
 
-IRQ issues usually occur during bootups but some may notice that IRQ calls can break with sleep, this fix is fairly easy:
+IRQ问题通常发生在启动过程中，但有些人可能会注意到IRQ调用可以中断与睡眠，这个修复是相当容易的:
 
 * [SSDTTime](https://github.com/corpnewt/SSDTTime)
-  * First dump your DSDT in Linux/Windows
-  * then select `FixHPET` option
+  * 首先将DSDT转储到Linux/Windows中
+  * 然后选择`FixHPET`选项
 
-This will provide you with both SSDT-HPET.aml and `patches_OC.plist`, You will want to add the SSDT to EFI/OC/ACPI and add the ACPI patches into your config.plist from the patches_OC.plist
+这将为您提供SSDT- hpet.aml和`patches_OC.plist`，您需要将SSDT添加到EFI/OC/ACPI，并从patches_OC.plist将ACPI补丁添加到您的config.plist中
 
-### Audio
+### 音频
 
-Unmanaged or incorrectly managed audio devices can also cause issues, either disable unused audio devices  in your BIOS or verify they're working correctly here:
+未管理或不正确管理的音频设备也可能导致问题，要么在BIOS中禁用未使用的音频设备，要么在这里验证它们是否正常工作:
 
-* [Fixing Audio](../universal/audio.md)
+* [修复音频](../universal/audio.md)
 
 ### SMBus
 
-Main reason you'd care about SMBus is AppleSMBus can help properly manage both SMBus and PCI devices like with power states. Problem is the kext usually won't load by itself, so you'll need to actually create the SSDT-SMBS-MCHC.
+您关心SMBus的主要原因是AppleSMBus可以帮助正确管理SMBus和PCI设备，如电源状态。问题是kext通常不会自己加载，因此您需要实际创建SSDT-SMBS-MCHC。
 
-See here on more info on how to make it: [Fixing SMBus support](https://sumingyd.github.io/Getting-Started-With-ACPI/Universal/smbus.html)
+看这里关于如何使它的更多信息:[修复SMBus支持](https://sumingyd.github.io/Getting-Started-With-ACPI/Universal/smbus.html)
 
 ### TSC
 
-The TSC(Time Stamp Counter) is responsible for making sure you're hardware is running at the correct speed, problem is some firmware(mainly HEDT/Server and Asus Laptops) will not write the TSC to all cores causing issues. To get around this, we have 3 options:
+TSC(时间戳计数器)负责确保你的硬件以正确的速度运行，问题是一些固件(主要是HEDT/服务器和华硕笔记本电脑)不会将TSC写入所有核心，从而导致问题。为了解决这个问题，我们有三个选择:
 
 * [CpuTscSync](https://github.com/lvs1974/CpuTscSync/releases)
-  * For troublesome laptops
+  * 针对麻烦的笔记本电脑
 * [VoodooTSCSync](https://bitbucket.org/RehabMan/VoodooTSCSync/downloads/)
-  * For most HEDT hardware
+  * 用于大多数HEDT硬件
 * [TSCAdjustReset](https://github.com/interferenc/TSCAdjustReset)
-  * For Skylake X/W/SP and Cascade Lake X/W/SP hardware
+  * 用于Skylake X/W/SP和Cascade Lake X/W/SP硬件
   
-The former 2 are plug n play, while the latter will need some customizations:
+前两个是即插即用，而后者需要一些定制:
 
-* Open up the kext(ShowPackageContents in finder, `Contents -> Info.plist`) and change the Info.plist -> `IOKitPersonalities -> IOPropertyMatch -> IOCPUNumber` to the number of CPU threads you have starting from `0`(i9 7980xe 18 core would be `35` as it has 36 threads total)
-* Compiled version can be found here: [TSCAdjustReset.kext](https://github.com/dortania/OpenCore-Install-Guide/blob/master/extra-files/TSCAdjustReset.kext.zip)
+* 打开kext(在访达中显示包内容， `Contents -> Info.plist`)并更改Info plist -> `IOKitPersonalities -> IOPropertyMatch -> IOCPUNumber`为从`0`开始的CPU线程数(i9 7980xe 18核心将是`35`，因为它总共有36个线程)
+* 编译后的版本可以在这里找到:[tscadjustreet .kext](https://github.com/dortania/OpenCore-Install-Guide/blob/master/extra-files/TSCAdjustReset.kext.zip)
 
 ![](../images/post-install/sleep-md/tsc.png)
 
-The most common way to see the TSC issue:
+查看TSC问题的最常见方法:
 
-Case 1    |  Case 2
+案例 1    |  案例 2
 :-------------------------:|:-------------------------:
 ![](../images/troubleshooting/troubleshooting-md/asus-tsc.png)  |  ![](../images/troubleshooting/troubleshooting-md/asus-tsc-2.png)
