@@ -112,9 +112,9 @@
 **macOS Big Sur**:
 
 * 11.0.1
-  * 查看这里: [OpenCore 和 macOS 11: Big Sur](https://dortania.github.io/OpenCore-Install-Guide/extras/big-sur/)
+  * 查看这里: [OpenCore 和 macOS 11: Big Sur](https://sumingyd.github.io/OpenCore-Install-Guide/extras/big-sur/)
 
 **macOS Monterey**:
 
 * 12.0.1
-  * 查看这里: [OpenCore 和 macOS 12: Monterey](https://dortania.github.io/OpenCore-Install-Guide/extras/monterey.html)
+  * 查看这里: [OpenCore 和 macOS 12: Monterey](https://sumingyd.github.io/OpenCore-Install-Guide/extras/monterey.html)

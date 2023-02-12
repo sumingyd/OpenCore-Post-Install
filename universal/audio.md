@@ -158,7 +158,7 @@ kextstat | grep -E "AppleHDA|AppleALC|Lilu"
 * **注入顺序**:确保Lilu在kext顺序上高于AppleALC
 * **所有的kext都是最新版本**:对于Lilu插件尤其重要，因为不匹配的kext可能会导致问题
 
-Note: To setup file logging, see [OpenCore Debugging](https://dortania.github.io/OpenCore-Install-Guide/troubleshooting/debug.html).
+Note: To setup file logging, see [OpenCore Debugging](https://sumingyd.github.io/OpenCore-Install-Guide/troubleshooting/debug.html).
 
 ### 检查AppleALC是否正确打补丁
 

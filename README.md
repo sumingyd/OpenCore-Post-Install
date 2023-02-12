@@ -72,7 +72,7 @@
 
 ### 多重引导
 
-* [OpenCore 多重引导](https://dortania.github.io/OpenCore-Multiboot/)
+* [OpenCore 多重引导](https://sumingyd.github.io/OpenCore-Multiboot/)
   * 使用OpenCore进行多重引导的专用指南
 * [设置启动选项](./multiboot/bootstrap.md)
   * 确保Windows不会从我们的系统中删除OpenCore。

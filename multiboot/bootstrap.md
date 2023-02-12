@@ -32,7 +32,7 @@ If no new boot option is created, you can follow these troubleshooting steps but
 
 ### Verify LauncherOption entry was applied
 
-For those wanting to verify that the entry was applied in OpenCore, enable logging (see [OpenCore Debugging](https://dortania.github.io/OpenCore-Install-Guide/troubleshooting/debug.html)) and check for entries similar to these:
+For those wanting to verify that the entry was applied in OpenCore, enable logging (see [OpenCore Debugging](https://sumingyd.github.io/OpenCore-Install-Guide/troubleshooting/debug.html)) and check for entries similar to these:
 
 ```
 OCB: Have existing option 1, valid 1

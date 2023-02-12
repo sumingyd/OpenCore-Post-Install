@@ -114,122 +114,122 @@ sudo pmset tcpkeepalive 0
 * iGPU唤醒部分是由于苹果公司在真正的mac上使用applegraphicpowermanagement.kext的大量黑客行为造成的，为了解决这个问题，你可能需要`igfxonln=1`来强制所有显示在线。显然，首先要进行测试，以确保您有这个问题。
 * A对于桌面 Coffee Lake (UHD 630) 的用户来说，AAPL,ig-platform-id `07009B3E`可能会失败，你可以试试`00009B3E`。`0300923E`有时也是有效的。
 
-Other iGPU notes:
+其他iGPU注意事项:
 
-* Some systems with iGPUs (e.g. Kaby Lake and Coffee Lake) may cause system instability in lower power states, and can sometimes manifest as NVMe kernel panics. To resolve, you can add `forceRenderStandby=0` to your boot-args to disable RC6 Render Standby. See here for more info: [IGP causes NVMe Kernel Panic CSTS=0xffffffff #1193](https://github.com/acidanthera/bugtracker/issues/1193)
-* Certain Ice Lake laptops may also kernel panic on `Cannot allow DC9 without disallowing DC6` due to issues with transitioning states. A work around for this is using either `-noDC9` or `-nodisplaysleepDC6` in your boot-args
+* 一些使用igpu的系统(例如Kaby Lake和Coffee Lake)可能会在低功耗状态下导致系统不稳定，有时会表现为NVMe内核崩溃。要解决这个问题，你可以在你的引导参数中添加`forceRenderStandby=0`来禁用RC6备用渲染。查看这里了解更多信息:[IGP导致NVMe内核恐慌CSTS=0xffffffff#1193](https://github.com/acidanthera/bugtracker/issues/1193)
+* 由于转换状态的问题，某些Ice Lake笔记本电脑也可能在“不允许DC6而不允许DC9”时出现内核崩溃。一种解决方法是在你的启动参数中使用`-noDC9`或`-nodisplaysleepDC6`
 
-Special note for 4k Displays with AMD dGPUs:
+AMD dgpu 4k显示器的特别注意事项:
 
-* Some displays may fail to wake randomly, mainly caused by AGDC preferences. To fix, apply this to your dGPU in DeviceProperties:
+* 某些显示器可能无法随机唤醒，主要是由AGDC首选项引起的。要修复这个问题，请在DeviceProperties中将其应用到dGPU上:
   * `CFG,CFG_USE_AGDC | Data | 00`
-  * You can find the PciRoot of your GPU with [gfxutil](https://github.com/acidanthera/gfxutil/releases)
+  * 你可以通过[gfxutil](https://github.com/acidanthera/gfxutil/releases)找到GPU的PciRoot
     * `/path/to/gfxutil -f GFX0`
 
 ![](../images/post-install/sleep-md/agdc.png)
 
-### Fixing Thunderbolt
+### 修复Thunderbolt
 
-Thunderbolt is a very tricky topic in the community, mainly due to the complexity of the situation. You really have just 2 paths to go down if you want Thunderbolt and sleep to work simultaneously:
+Thunderbolt在社区中是一个非常棘手的话题，主要是由于情况的复杂性。如果你想让Thunderbolt和sleep同时工作，你真的只有两条路可走:
 
-* Disable Thunderbolt 3 in the BIOS
-* Attempt to patch Thunderbolt 3:
-  * [Thunderbolt 3 Fix](https://osy.gitbook.io/hac-mini-guide/details/thunderbolt-3-fix/)
+* 在BIOS中禁用Thunderbolt 3
+* 尝试修补Thunderbolt 3:
+  * [Thunderbolt 3 修复](https://osy.gitbook.io/hac-mini-guide/details/thunderbolt-3-fix/)
   * [ThunderboltReset](https://github.com/osy86/ThunderboltReset)
   * [ThunderboltPkg](https://github.com/al3xtjames/ThunderboltPkg/blob/master/Docs/FAQ.md)
 
-Note: Thunderbolt can be enabled without extra work *if* you're ok without sleep, and vice versa.
+注意:Thunderbolt可以在不需要额外工作的情况下启用，**如果**你不需要睡眠也没问题，反之亦然。
 
-### Fixing NICs
+### 修复网卡
 
-NICs(network Interface Controllers) are fairly easy to fix with sleep, it's mainly the following:
+网卡(网络接口控制器)与睡眠很容易修复,主要是以下几点:
 
-* Disable `WakeOnLAN` in the BIOS
-  * Most systems will enter a sleep/wake loop with this enabled
-* Disable `Wake for network access` in macOS(SystemPreferences -> Power)
-  * Seems to break on a lot of hacks
+* 在BIOS中禁用WakeOnLAN
+  * 大多数系统将进入睡眠/唤醒循环启用
+* 在macOS中禁用`Wake for network access` (SystemPreferences -> Power)
+  * 似乎能破解很多hack
   
-### Fixing NVMe
+### 修复NVMe
 
-So macOS can be quite picky when it comes to NVMe drives, and there's also the issue that Apple's power management drivers are limited to Apple branded drives only. So the main things to do are:
+所以macOS对NVMe驱动非常挑剔，而且苹果的电源管理驱动仅限于苹果品牌的驱动。所以要做的主要事情是:
 
-* Make sure the NVMe is on the latest firmware(especially important for [970 Evo Plus drives](https://www.tonymacx86.com/threads/do-the-samsung-970-evo-plus-drives-work-new-firmware-available-2b2qexm7.270757/page-14#post-1960453))
-* Use [NVMeFix.kext](https://github.com/acidanthera/NVMeFix/releases) to allow for proper NVMe power management
+* 确保NVMe在最新固件上(对于[970 Evo Plus驱动器](https://www.tonymacx86.com/threads/do-the-samsung-970-evo-plus-drives-work-new-firmware-available-2b2qexm7.270757/page-14#post-1960453)尤其重要)
+* 使用[NVMeFix.kext](https://github.com/acidanthera/NVMeFix/releases)来进行适当的NVMe电源管理
 
-And avoid problematic drives, the main culprits:
+并避免问题驱动，主要罪魁祸首:
 
-* Samsung's PM981 and PM991 SSDs
-* Micron's 2200S
+* 三星的PM981和PM991固态硬盘
+* Micron的2200S
 
-If you however do have these drives in your system, it's best to disable them via an SSDT: [Disabling desktop dGPUs](https://dortania.github.io/Getting-Started-With-ACPI/Desktops/desktop-disable.html).
-This guide is primarily for dGPU but works the exact same way with NVMe drives(as they're both just PCIe devices)
+如果你的系统中有这些驱动器，最好通过SSDT禁用它们:[禁用桌面dgpu](https://sumingyd.github.io/Getting-Started-With-ACPI/Desktops/desktop-disable.html)。
+本指南主要针对dGPU，但对NVMe驱动器的工作原理完全相同(因为它们都只是PCIe设备)。
   
-### Fixing CPU Power Management
+### 修复CPU电源管理
 
-**For Intel**:
+**来自 Intel**:
 
-To verify you have working CPU Power Management, see the [Fixing Power Management](../universal/pm.md) page.
+要验证您是否有工作的CPU电源管理，请参阅[固定电源管理](../universal/pm.md) page.
 
-Also note that incorrect power management data can result in wake issues, so verify that you're using the correct SMBIOS.
+还要注意，不正确的电源管理数据可能导致唤醒问题，因此请验证您正在使用正确的SMBIOS。
 
-A common kernel panic from wake would be:
+一个常见的内核唤醒错误是:
 
 ```
 Sleep Wake failure in EFI
 ```
 
-**For AMD**:
+**来自 AMD**:
 
-Fret not, for their is still hope for you as well! [AMDRyzenCPUPowerManagement.kext](https://github.com/trulyspinach/SMCAMDProcessor) can add power management to Ryzen based CPUs. Installation and usage is explained on the repo's README.md
+不要着急，因为他们对你还有希望![AMDRyzenCPUPowerManagement.kext](https://github.com/trulyspinach/SMCAMDProcessor)可以添加基于Ryzen cpu电源管理。仓库的README.md中解释了安装和使用方法
 
-## Other Culprits
+## 其他罪魁祸首
 
-* [Displays](#displays)
+* [显示](#displays)
 * [NVRAM](#nvram)
 * [RTC](#rtc)
-* [IRQ Conflicts](#irq-conflicts)
-* [Audio](#audio)
+* [IRQ 冲突](#irq-conflicts)
+* [音频](#audio)
 * [SMBus](#smbus)
 * [TSC](#tsc)
 
-### Displays
+### 显示
 
-So display issues are mainly for laptop lid detection, specifically:
+所以显示问题主要是针对笔记本电脑的盖子检测，具体来说:
 
-* Incorrectly made SSDT-PNLF
-* OS vs firmware lid wake
-* Keyboard spams from lid waking it(On PS2 based keyboards)
+* 错误制作SSDT-PNLF
+* 操作系统与固件的盖子唤醒
+* 键盘垃圾从盖子唤醒它(基于PS2的键盘)
 
-The former is quite easy to fix, see here: [Backlight PNLF](https://dortania.github.io/Getting-Started-With-ACPI/)
+前者很容易修复，参见这里:[背光PNLF](https://sumingyd.github.io/Getting-Started-With-ACPI/)
 
-For the middle, macOS's lid wake detection can bit a bit broken and you may need to outright disable it:
+对于中间部分，macOS的盖子唤醒检测可能有点坏，你可能需要完全禁用它:
 
 ```sh
 sudo pmset lidwake 0
 ```
 
-And set `lidwake 1` to re-enable it.
+并设置`lidwake 1`来重新启用它。
 
-The latter requires a bit more work. What we'll be doing is trying to nullify semi random key spams that happen on Skylake and newer based HPs though pop up in other OEMs as well. This will also assume that your keyboard is PS2 based and are running [VoodooPS2](https://github.com/acidanthera/VoodooPS2/releases).
+后者需要更多的工作。我们要做的是试图消除在Skylake和更新的基于HPs上发生的半随机密钥垃圾邮件，尽管在其他oem中也会出现。这也将假设你的键盘是基于PS2并且正在运行[VoodooPS2](https://github.com/acidanthera/VoodooPS2/releases).
 
-To fix this, grab [SSDT-HP-FixLidSleep.dsl](https://github.com/acidanthera/VoodooPS2/blob/master/Docs/ACPI/SSDT-HP-FixLidSleep.dsl) and adapt the ACPI pathing to your keyboard(`_CID` value being `PNP0303`). Once this is done, compile and drop into both EFI/OC/ACPI and under config.plist -> ACPI -> Add.
+要解决这个问题，请获取[SSDT-HP-FixLidSleep.dsl](https://github.com/acidanthera/VoodooPS2/blob/master/Docs/ACPI/SSDT-HP-FixLidSleep.dsl)并将ACPI路径调整到您的键盘(`_CID`值为`PNP0303`)。一旦完成，编译并放入EFI/OC/ACPI和config plist -> ACPI -> Add。
 
-For 99% of HP users, this will fix the random key spam. If not, see below threads:
+对于99%的HP用户来说，这将解决随机密钥的垃圾问题。如果没有，请参阅下面的帖子:
 
-* [RehabMan's brightness key guide](https://www.tonymacx86.com/threads/guide-patching-dsdt-ssdt-for-laptop-backlight-control.152659/)
+* [RehabMan的亮度键指南](https://www.tonymacx86.com/threads/guide-patching-dsdt-ssdt-for-laptop-backlight-control.152659/)
 
 ### NVRAM
 
-To verify you have working NVRAM, see the [Emulated NVRAM](../misc/nvram.md) page to verify you have working NVRAM. And if not, then patch accordingly.
+要验证您有工作的NVRAM，请参阅[模拟NVRAM](../misc/ NVRAM. md)页面来验证您有工作的NVRAM。如果没有，则相应地打补丁。
 
 ### RTC
 
-This is mainly relevant for Intel 300 series motherboards(Z3xx), specifically that there's 2 issues:
+这主要与Intel 300系列主板(Z3xx)有关，具体来说有两个问题:
 
-* Be default the RTC is disabled(instead using AWAC)
-* The RTC is usually not compatible with macOS
+* 默认RTC是禁用的(而不是使用AWAC)
+* RTC通常与macOS不兼容
 
-To get around the first issue, see here: [Fixing AWAC](https://dortania.github.io/Getting-Started-With-ACPI/Universal/awac.html)
+To get around the first issue, see here: [Fixing AWAC](https://sumingyd.github.io/Getting-Started-With-ACPI/Universal/awac.html)
 
 For the second one, it's quite easy to tell you have RTC issues when you either shutdown or restart. Specifically you'll be greeted with a "BIOS Restarted in Safemode" error. To fix this, we'll need to prevent macOS from writing to the RTC regions causing these issues. There are a couple fixes:
 
@@ -261,7 +261,7 @@ Unmanaged or incorrectly managed audio devices can also cause issues, either dis
 
 Main reason you'd care about SMBus is AppleSMBus can help properly manage both SMBus and PCI devices like with power states. Problem is the kext usually won't load by itself, so you'll need to actually create the SSDT-SMBS-MCHC.
 
-See here on more info on how to make it: [Fixing SMBus support](https://dortania.github.io/Getting-Started-With-ACPI/Universal/smbus.html)
+See here on more info on how to make it: [Fixing SMBus support](https://sumingyd.github.io/Getting-Started-With-ACPI/Universal/smbus.html)
 
 ### TSC
 

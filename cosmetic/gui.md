@@ -54,7 +54,7 @@ So to start, we'll need a couple of things:
   * Add the Resources folder to EFI/OC, just like we did with the OpenCore GUI section
   * For those running out of space, `OCEFIAudio_VoiceOver_Boot.mp3` is all that's required for the Boot-Chime
 * Debug version of OpenCore with logging enabled
-  * See [OpenCore Debugging](https://dortania.github.io/OpenCore-Install-Guide/troubleshooting/debug.html) for more info
+  * See [OpenCore Debugging](https://sumingyd.github.io/OpenCore-Install-Guide/troubleshooting/debug.html) for more info
   * Note: after you're done setting up, you can revert to the RELEASE builds
 
 **Setting up NVRAM**:

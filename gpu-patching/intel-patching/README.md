@@ -142,7 +142,7 @@ Now that we've gone over the basics of setting up an iGPU, let's get into some d
   * To verify if they loaded correctly in macOS, run the below command(if nothing is outputted, the kexts are not loading)
   * `kextstat | grep -E "Lilu|WhateverGreen"`
 * `DeviceProperties -> Add -> PciRoot(0x0)/Pci(0x2,0x0)` has been correctly setup
-  * Refer to your specific generation in the [config.plist section](https://dortania.github.io/OpenCore-Install-Guide/)
+  * Refer to your specific generation in the [config.plist section](https://sumingyd.github.io/OpenCore-Install-Guide/)
 
 Now head forth into your framebuffer patching journey!:
 

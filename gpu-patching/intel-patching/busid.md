@@ -72,7 +72,7 @@ Here we have 2 sections:
 
 Mapping videos in macOS is fairly easy, as we can assume that one of our ports is mapped correctly in the framebuffer.
 
-For this example, we'll explain the common [HDMI-hotplug fix for Kaby lake users](https://dortania.github.io/OpenCore-Install-Guide/config-laptop.plist/kaby-lake.html#deviceproperties). To start, lets look at the `0x591B0000` framebuffer:
+For this example, we'll explain the common [HDMI-hotplug fix for Kaby lake users](https://sumingyd.github.io/OpenCore-Install-Guide/config-laptop.plist/kaby-lake.html#deviceproperties). To start, lets look at the `0x591B0000` framebuffer:
 
 ```
 ID: 591B0000, STOLEN: 38 MB, FBMEM: 21 MB, VRAM: 1536 MB, Flags: 0x0000130B

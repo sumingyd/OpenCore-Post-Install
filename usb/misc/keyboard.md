@@ -42,7 +42,7 @@ Now we can shove that into our SSDT:
 
 ![](../../images/post-install/usb-md/usbw.png)
 
-Now with that done, you can compile and add it to your EFI and config.plist. See [Getting Started With ACPI](https://dortania.github.io/Getting-Started-With-ACPI/Manual/compile.html) for more info on compiling SSDTs
+Now with that done, you can compile and add it to your EFI and config.plist. See [Getting Started With ACPI](https://sumingyd.github.io/Getting-Started-With-ACPI/Manual/compile.html) for more info on compiling SSDTs
 
 ## Method 3 - Configuring darkwake
 
