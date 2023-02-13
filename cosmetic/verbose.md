@@ -1,44 +1,44 @@
-# Fixing Resolution and Verbose
+# 修复分辨率和详细信息
 
-Wanting a more clean booting experience with macOS without all that verbose text while booting? Well you need a couple things:
+想要使用macOS获得更简洁的启动体验，而不是启动时冗长的文本?你需要几件事:
 
-## macOS Decluttering
+## macOS整理
 
 **`Misc -> Debug`**
 
-* Set `AppleDebug` to False, this will remove boot.efi debugging right at the start of booting.
+* 将`AppleDebug`设置为False，这将在启动时移除boot.efi调试。
 
 **`NVRAM -> Add -> 7C436110-AB2A-4BBB-A880-FE41995C9F82`**:
 
-* Remove `-v` from boot-args in your config.plist
+* 在config.plist中删除引导参数中的`-v`
 
 **`NVRAM -> Add -> 4D1EDE05-38C7-4A6A-9CC6-4BCCA8B38C14`**:
 
 * UIScale
-  * `01`: Standard resolution
-  * `02`: HiDPI (generally required for FileVault to function correctly on smaller displays)
+  * `01`: 标准分辨率
+  * `02`: HiDPI (保险库通常需要在较小的显示器上正常工作)
 
 **`UEFI -> Output`**:
 
-* `TextRenderer` set to`BuiltinGraphics`
-* `Resolution`: set to `Max` for best results
-  * Optionally can specify resolution: `WxH@Bpp (e.g. 1920x1080@32) or WxH (e.g. 1920x1080)`
-* `ProvideConsoleGop` set to True
+* `TextRenderer` 设置为`BuiltinGraphics`
+* `Resolution`: 设置为 `Max` 以获得最佳效果
+  * 可选指定分辨率:`WxH@Bpp(例如1920x1080@32)`或`WxH(例如1920x1080)`
+* `ProvideConsoleGop` 设置为 True
 
-If still having issues, see [Configuration.pdf](https://github.com/acidanthera/OpenCorePkg/blob/master/Docs/Configuration.pdf) for all possible options.
+如果仍然有问题，请参阅[Configuration.pdf](https://github.com/acidanthera/OpenCorePkg/blob/master/Docs/Configuration.pdf)以获得所有可能的选项。
 
-## OpenCore Decluttering
+## OpenCore整理
 
-So if you followed closely to this guide during install, you'll likely be running the debug version of OpenCore and a .txt file would be created on each boot. For those who want to remove OpenCore's extra debugging messages and that .txt file generation, see below:
+如果您在安装过程中密切遵循本指南，您可能会运行调试版本的OpenCore，并且在每次启动时将创建一个.txt文件。对于那些想要删除OpenCore的额外调试消息和.txt文件生成的人，请参见以下内容:
 
-**Inside your config.plist**:
+**在config.plist中**:
 
 * `Misc -> Debug -> Target`: 3
-  * `Target` is what determines both what is logged and how, see [OpenCore Debugging](https://sumingyd.github.io/OpenCore-Install-Guide/troubleshooting/debug.html) for more values
+  * `Target`决定记录什么以及如何记录，请参阅[OpenCore 调试](https://sumingyd.github.io/OpenCore-Install-Guide/troubleshooting/debug.html)了解更多值
   
-**Inside your EFI**:
+**在EFI中**:
 
-* Replace the following files with the [release versions](https://github.com/acidanthera/OpenCorePkg/releases)(if previously using DEBUG versions):
+* 将以下文件替换为[发布版本](https://github.com/acidanthera/OpenCorePkg/releases)(如果以前使用的是调试版本):
   * EFI/BOOT/
     * `BOOTx64.efi`
   * EFI/OC/Drivers/
