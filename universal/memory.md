@@ -1,29 +1,29 @@
-# Fixing MacPro7,1 Memory Errors
+# 修复MacPro7,1内存错误
 
-On macOS Catalina and newer, users of the MacPro7,1 SMBIOS will experience this error on each boot:
+在macOS Catalina和更新版本上，MacPro7,1 SMBIOS的用户在每次引导时都会遇到以下错误:
 
-| Notification error | About This Mac Error |
+| 通知错误 | 关于此Mac错误 |
 | :--- | :--- |
 | <img width="1362" src=../images/post-install/memory-md/memory-error-notification.png>  | ![](../images/post-install/memory-md/memory-error-aboutthismac.png) |
 
-The exact reason for this error is a bit unknown, however ways to resolve this error have been made possible. The most common way to remove the error is to use [RestrictEvents](https://github.com/acidanthera/RestrictEvents/releases) and we highly encourage all users to use this kext instead.
+这个错误的确切原因有点未知，但是解决这个错误的方法是可行的。最常见的消除错误的方法是使用[RestrictEvents](https://github.com/acidanthera/RestrictEvents/releases)，我们强烈建议所有用户使用这个kext。
 
-For those who wish to attempt the legacy mapping way, see the below guide. Note it will require you to map all your DIMMs manually so this will be a time consuming process.
+对于那些希望尝试传统映射方式的人，请参阅下面的指南。注意，这需要您手动映射所有内存，因此这将是一个耗时的过程。
 
-## Mapping our memory
+## 映射我们的内存
 
-To start, we'll want to grab the following files:
+首先，我们要获取以下文件:
 
 * [CustomMemory.plist](https://github.com/dortania/OpenCore-Post-Install/blob/master/extra-files/CustomMemory.plist.zip)
-  * Example setup for using CustomMemory in OpenCore
+  * 在OpenCore使用CustomMemory的示例设置
 * [dmidecode](https://github.com/acidanthera/dmidecode/releases)
-  * Tool used for extracting SMBIOS info in macOS
+  * 在OpenCore使用CustomMemory的示例设置
 
-Here is a premade file which has properties already set out for you, once you open it you should see the following:
+这是一个已经为你设置了属性的预制文件，一旦你打开它，你应该看到以下内容:
 
 ![](../images/post-install/memory-md/CustomMemory-open.png)
 
-From here we see may properties, lets try to break it down:
+从这里我们可以看到许多属性，让我们尝试将其分解:
 
 * [DataWidth](#datawidth)
 * [ErrorCorrection](#errorcorrection)
@@ -45,13 +45,13 @@ From here we see may properties, lets try to break it down:
 
 ### DataWidth
 
-Specifies the data width, in bits, of the memory. A DataWidth of 0 and a TotalWidth of 8 indicates that the device is being used solely to provide 8 error-correction bits.
+指定内存的数据宽度，以位为单位。数据宽度为0，总宽度为8，表示设备仅用于提供8个纠错位。
 
-To determine the DataWidth, run the following:
+要确定数据宽度，运行以下命令:
 
 ```sh
 path/to/dmidecode -t memory | grep "Data Width:"
-# Example Output
+# 示例输出
  Data Width: 64 bits
  Data Width: Unknown
  Data Width: 64 bits
@@ -60,13 +60,13 @@ path/to/dmidecode -t memory | grep "Data Width:"
  Data Width: Unknown
  Data Width: 64 bits
  Data Width: Unknown
-# Final Value
+# 最终值
 DataWidth = 64
 ```
 
 ### ErrorCorrection
 
-Specifies ECC support:
+指定ECC支持:
 
 ```
 1 — Other
@@ -78,19 +78,19 @@ Specifies ECC support:
 7 — CRC
 ```
 
-To determine ErrorCorrection, run the following:
+运行下面的命令来确定错误修正:
 
 ```sh
 path/to/dmidecode -t memory | grep "Error Correction Type:"
-# Example Output
+# 示例输出
  Error Correction Type: None
-# Final Value
+# 最终值
 ErrorCorrection = 3
 ```
 
 ### FormFactor
 
-Specifies Memory Form Factor
+指定内存形式
 
 ```
 1  — Other
@@ -100,11 +100,11 @@ Specifies Memory Form Factor
 15 — FB-DIMM
 ```
 
-To determine FormFactor, run the following:
+运行如下命令来确定FormFactor:
 
 ```sh
 path/to/dmidecode -t memory | grep "Form Factor:"
-# Example Output
+# 示例输出
  Form Factor: DIMM
  Form Factor: DIMM
  Form Factor: DIMM
@@ -113,13 +113,13 @@ path/to/dmidecode -t memory | grep "Form Factor:"
  Form Factor: DIMM
  Form Factor: DIMM
  Form Factor: DIMM
-# Final Value
+# 最终值
 FormFactor = 9
 ```
 
 ### MaxCapacity
 
-Specifies maximum supported memory in your system
+指定系统中支持的最大内存
 
 Type: Bytes
 
@@ -134,13 +134,13 @@ Type: Bytes
 
 ### TotalWidth
 
-Specifies the total width, in bits, of the memory, including any check or error-correction bits. If there are no error-correction bits, this value should be equal to DataWidth.
+指定内存的总宽度(以位为单位)，包括任何检查或纠错位。如果没有纠错位，该值应该等于数据宽度。以上翻译结果来自有道神经网络翻译（YNMT）· 通用领域
 
-To determine TotalWidth, run the following:
+要确定TotalWidth，运行以下命令:
 
 ```sh
 path/to/dmidecode -t memory | grep "Total Width:"
-# Example Output
+# 示例输出
  Total Width: 72 bits
  Total Width: Unknown
  Total Width: 72 bits
@@ -149,13 +149,13 @@ path/to/dmidecode -t memory | grep "Total Width:"
  Total Width: Unknown
  Total Width: 72 bits
  Total Width: Unknown
-# Final Value
+# 最终值
 TotalWidth = 72
 ```
 
 ### Type
 
-Specifies memory type
+指定内存类型
 
 ```
 1  — Other
@@ -172,11 +172,11 @@ Specifies memory type
 30 — LPDDR4
 ```
 
-To determine Type, run the following:
+要确定Type，执行以下命令:
 
 ```sh
 path/to/dmidecode -t memory | grep "Type:"
-# Example Output
+# 示例输出
  Type: DDR4
  Type: Unknown
  Type: DDR4
@@ -185,13 +185,13 @@ path/to/dmidecode -t memory | grep "Type:"
  Type: Unknown
  Type: DDR4
  Type: Unknown
-# Final Value
+# 最终值
 Type = 26
 ```
 
 ### TypeDetail
 
-Specifies other memory type information
+指定其他内存类型信息
 
 ```
 Bit 0 — Reserved, set to 0
@@ -202,7 +202,7 @@ Bit 13 — Registered (buffered)
 Bit 14 — Unbuffered (unregistered)
 ````
 
-Combine all that are applicable, example:
+把所有适用的组合起来，例如:
 
 ```
 Bit 13 — Registered (buffered)
@@ -211,11 +211,11 @@ Bit 14 — Unbuffered (unregistered)
 27 = TypeDetail
 ```
 
-To determine TypeDetail, run the following:
+要确定TypeDetail，运行以下命令:
 
 ```sh
 path/to/dmidecode -t memory | grep "Type Detail:"
-# Example Output
+# 示例输出
  Type Detail: Synchronous
  Type Detail: Synchronous
  Type Detail: Synchronous
@@ -224,25 +224,25 @@ path/to/dmidecode -t memory | grep "Type Detail:"
  Type Detail: Synchronous
  Type Detail: Synchronous
  Type Detail: Synchronous
-# Final Value
+# 最终值
 TypeDetail = 7
 ```
 
 ### Devices
 
-Array of Memory Devices, and where we do out magic to fix the error. In the sample CustomMemory.plist I provided, we have 12 slots listed here. From this, you'll want to open up System Profiler in macOS and look at the Memory tab:
+存储设备的数组，我们在这里施展魔法来修复错误。在我提供的示例CustomMemory.plist中，我们在这里列出了12个插槽。然后，在macOS中打开System Profiler并查看Memory选项卡:
 
 ![](../images/post-install/memory-md/system-profiler.png)
 
-Here we see which slots are populated by memory, and which are empty. For filled slots, simply run through the below on how to pull information. For slots that are empty however, you'll want to add some blank information into thinking macOS has populated device. Ensure that by the end, you have 12 total slots filled with devices.
+在这里，我们可以看到哪些槽被内存填充了，哪些是空的。对于填充的插槽，只需阅读下面关于如何获取信息的内容。然而，对于空槽，你需要添加一些空白信息，以为macOS已经填充了设备。确保到最后，总共有12个插槽装满了设备。
 
-Example of filled slots vs fake:
+填充槽和假槽的例子:
 
 ![](../images/post-install/memory-md/memory-example.png)
 
-We recommend setting the Size and Speed to both 1, to ensure applications that do pull from memory are not confused that you have more than you should.
+我们建议将Size和Speed都设置为1，以确保从内存中提取的应用程序不会混淆，因为您拥有的内存超过了应该使用的内存。
 
-Next lets break down the properties:
+接下来让我们分解属性:
 
 * [AssetTag](#assettag)
 * [BankLocator](#banklocator)
@@ -255,16 +255,16 @@ Next lets break down the properties:
 
 #### AssetTag
 
-To determine AssetTag, run the following:
+要确定AssetTag，运行以下命令:
 
 ```sh
 path/to/dmidecode -t memory | grep "Asset Tag:"
-#Example Output
+#示例输出
 
-# Final Value
+# 最终值
 ```
 
-* If dmidecode prints `Not Specified`, you can simply leave this entry blank
+* 如果dmidecode打印出`Not Specified`，你可以将这个条目留空
 
 #### BankLocator
 
@@ -272,20 +272,20 @@ To determine BankLocator, run the following:
 
 ```sh
 path/to/dmidecode -t memory | grep "Bank Locator:"
-#Example Output
+#示例输出
 
-# Final Value
+# 最终值
 ```
 
-* If dmidecode prints `Not Specified`, you can simply leave this entry blank
+* 如果dmidecode打印出`Not Specified`，你可以将这个条目留空
 
 #### DeviceLocator
 
-To determine DeviceLocator, run the following:
+要确定DeviceLocator，运行以下命令:
 
 ```sh
 path/to/dmidecode -t memory | grep "Locator:"
-#Example Output
+#示例输出
  Locator: DIMM_A1
  Locator: DIMM_A2
  Locator: DIMM_B1
@@ -294,7 +294,7 @@ path/to/dmidecode -t memory | grep "Locator:"
  Locator: DIMM_C2
  Locator: DIMM_D1
  Locator: DIMM_D2
-# Final Value
+# 最终值
 Entry 1:  DIMM_A1
 Entry 2:  DIMM_A2
 Entry 3:  DIMM_B1
@@ -311,22 +311,22 @@ Entry 12: DIMM_EMPTY
 
 #### Manufacturer
 
-To determine Manufacturer, run the following:
+要确定Manufacturer，运行以下命令:
 
 ```sh
 path/to/dmidecode -t memory | grep "Manufacturer:"
-#Example Output
+#示例输出
 
-# Final Value
+# 最终值
 ```
 
 #### PartNumber
 
-To determine PartNumber, run the following:
+要确定PartNumber，执行以下命令:
 
 ```sh
 path/to/dmidecode -t memory | grep "Part Number:"
-#Example Output
+#示例输出
  Part Number: KHX2666C16/8G
  Part Number: NO DIMM
  Part Number: KHX2666C16/8G
@@ -335,7 +335,7 @@ path/to/dmidecode -t memory | grep "Part Number:"
  Part Number: NO DIMM
  Part Number: KHX2666C15D4/8G
  Part Number: NO DIMM
-# Final Value
+# 最终值
 Entry 1:  KHX2666C16/8G
 Entry 2:  EmptyDIMM
 Entry 3:  KHX2666C16/8G
@@ -352,11 +352,11 @@ Entry 12: EmptyDIMM
 
 #### SerialNumber
 
-To determine SerialNumber, run the following:
+要确定SerialNumber，运行如下命令:
 
 ```sh
 path/to/dmidecode -t memory | grep "Serial Number:"
-#Example Output
+#示例输出
  Serial Number: 0F095257
  Serial Number: NO DIMM
  Serial Number: 0C099A57
@@ -365,7 +365,7 @@ path/to/dmidecode -t memory | grep "Serial Number:"
  Serial Number: NO DIMM
  Serial Number: A2032E84
  Serial Number: NO DIMM
-# Final Value
+# 最终值
 Entry 1:  0F095257
 Entry 2:  EmptyDIMM
 Entry 3:  0C099A57
@@ -382,7 +382,7 @@ Entry 12: EmptyDIMM
 
 #### Size
 
-Size of single memory stick in MB
+单个内存棒的大小(以MB为单位)
 
 ```
 1GB  - 1024
@@ -395,11 +395,11 @@ Size of single memory stick in MB
 12GB - 131072
 ```
 
-To determine Size, run the following:
+要确定Size，运行以下命令:
 
 ```sh
 path/to/dmidecode -t memory | grep "Size:"
-#Example Output
+#示例输出
  Size: 8 GB
  Size: No Module Installed
  Size: 8 GB
@@ -408,7 +408,7 @@ path/to/dmidecode -t memory | grep "Size:"
  Size: No Module Installed
  Size: 8 GB
  Size: No Module Installed
-# Final Value
+# 最终值
 Entry 1:  8192
 Entry 2:  1
 Entry 3:  8192
@@ -425,15 +425,15 @@ Entry 12: 1
 
 #### Speed
 
-Speed of memory in Mhz
+以兆赫为单位的内存速度
 
 ex: `3000Mhz`
 
-To determine Speed, run the following:
+要确定Speed，运行以下命令:
 
 ```sh
 path/to/dmidecode -t memory | grep "Speed:"
-#Example Output
+#示例输出
  Speed: 2666 MT/s
  Speed: Unknown
  Speed: 2666 MT/s
@@ -442,7 +442,7 @@ path/to/dmidecode -t memory | grep "Speed:"
  Speed: Unknown
  Speed: 2666 MT/s
  Speed: Unknown
-# Final Value
+# 最终值
 Entry 1:  2666
 Entry 2:  1
 Entry 3:  2666
@@ -457,18 +457,18 @@ Entry 11: 1
 Entry 12: 1
 ```
 
-## Cleaning up
+## 清理
 
-Now that you've built the table, we can now merge it into our config.plist.
+现在已经构建了表，现在可以将它合并到config.plist中。
 
-Simply copy over your work from the CustomMemory.plist and paste it into PlatformInfo:
+只需从CustomMemory.plist复制你的工作并粘贴到platformminfo:
 
 ![](../images/post-install/memory-md/memory-example-done.png)
 
-Once this is copied over, enable `PlatformInfo -> CustomMemory` and reboot. The error should be no more now!
+复制完成后，启用`PlatformInfo -> CustomMemory`并重启。现在错误应该不会再出现了!
 
-Reminder that you must **fill** all 12 slots with memory, otherwise the error will not disappear:
+提醒你必须用内存**填充**所有的12个槽，否则错误将不会消失:
 
-| Fixed System Profiler | Fixed About This Mac |
+| 修复系统分析 | 修复关于此Mac |
 | :--- | :--- |
 | ![](../images/post-install/memory-md/memory-fixed-system-profiler.png) | ![](../images/post-install/memory-md/memory-fixed-aboutthismac.png) |
