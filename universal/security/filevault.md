@@ -1,33 +1,33 @@
 # FileVault
 
-FileVault is macOS's builtin drive encryption, and with OpenCore support for it has been drastically improved compared to the legacy Clover drivers.
+FileVault是macOS内置的驱动加密，与传统的Clover驱动程序相比，OpenCore对它的支持得到了极大的改进。
 
-To start, you'll need the following .efi drivers:
+首先，你需要以下 .efi 驱动程序:
 
 * OpenRuntime.efi
-  * [OpenUsbKbDxe.efi](https://github.com/acidanthera/OpenCorePkg/releases) for DuetPkg users(systems without UEFI support)
+  * [OpenUsbKbDxe.efi](https://github.com/acidanthera/OpenCorePkg/releases) 针对DuetPkg用户(未支持UEFI的系统)
 
-**Do not use VirtualSMC.efi with OpenCore, its already baked inside**. You do however require VirtualSMC.kext still
+**不要在OpenCore中使用VirtualSMC.efi，它已经内置了**。不过，您仍然需要VirtualSMC.kext
 
-Setting in your config.plist:
+设置你的 config.plist:
 
 * Misc -> Boot
-  * `PollAppleHotKeys` set to YES(While not needed can be helpful)
+  * `PollAppleHotKeys` 设置为 YES(虽然不需要，但可能会有所帮助)
 * Misc -> Security
-  * `AuthRestart` set to YES(Enables Authenticated restart for FileVault 2 so password is not required on reboot. Can be considered a security risk so optional)
+  * `AuthRestart` 设置为 YES(启用FileVault 2的身份验证重启，因此重启时不需要密码。可以被认为是一种安全风险，所以可选)
 * NVRAM -> Add -> 4D1EDE05-38C7-4A6A-9CC6-4BCCA8B38C14
-  * `UIScale` set to `02` for high resolution small displays
+  * `UIScale` 设置为 `02` 用于高分辨率的小型显示器
 * UEFI -> Input
-  * `KeySupport` set to YES(Only when using OpenCore's builtin input, users of OpenUsbKbDxe should avoid)
+  * `KeySupport` 设置为 YES(使用OpenCore内置输入时，使用OpenUsbKbDxe的用户应避免使用)
 * UEFI -> Output
   * `ProvideConsoleGop` to YES
 * UEFI -> ProtocolOverrides
-  * `FirmwareVolume` set to YES
-  * `HashServices` set to YES for Broadwell and older(this includes X99), this is needed for systems with broken SHA-1 hashing
+  * `FirmwareVolume` 设置为 YES
+  * `HashServices` 设置为 YES 对于Broadwell和更老的(包括X99)，这对于SHA-1散列崩溃的系统是必需的
 * UEFI -> Quirks
-  * `RequestBootVarRouting` set to YES
-  * `ExitBootServicesDelay` set to `3000`-`5000` if you receive `Still waiting for root device` on Aptio IV firmwares(Broadwell and older)
+  * `RequestBootVarRouting` 设置为 YES
+  * `ExitBootServicesDelay` 设置为 `3000`-`5000` 如果您在Aptio IV固件(Broadwell或更老版本)上收到 `Still waiting for root device`
 
-With all this, you can proceed to enable FileVault like on a normal mac under `System Preferences -> Security & Privacy -> FileVault`
+有了这些，你可以像在普通mac上一样在“系统首选项->安全和隐私-> FileVault”下启用FileVault。
 
-For UI issues, see [Fixing Resolution and Verbose](../../cosmetic/verbose.md)
+关于UI问题，参见[修复分辨率和详细信息](../../cosmetic/verbose.md)
