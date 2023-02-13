@@ -1,35 +1,35 @@
-# OpenCore Menu Password
+# OpenCore菜单密码
 
-With OpenCore 0.6.1 and newer, users are able to set a SHA-512 password to ensure best security with their setups. This will enable a password prompt whenever elevated tasks are required. This includes:
+使用OpenCore 0.6.1及更新版本，用户可以设置SHA-512密码，以确保其设置的最佳安全性。这将在需要升级的任务时启用密码提示。这包括:
 
-* Showing boot menu
-* Booting non-default OSes and tools(ie. not blessed by Startup Disk or Bootcamp Utility)
-* Resetting NVRAM
-* Booting non-default modes(ie. Verbose or Safe Mode via hotkeys)
+* 显示启动菜单
+* 引导非默认操作系统和工具(例如。没有启动盘或Bootcamp实用程序)
+* 重置NVRAM
+* 启动非默认模式(例如。通过热键进入详细或安全模式)
 
-With OpenCore 0.6.7, a new tool called `ocpasswordgen` was added to aid users in generating passwords.
+在OpenCore 0.6.7中，添加了一个名为`ocpasswordgen`的新工具来帮助用户生成密码。
 
-To start, lets grab OpenCore 0.6.7 or newer and run the `ocpasswordgen` binary under `Utilities/ocpasswordgen/`. It'll prompt you to create a password:
+首先，让我们获取OpenCore 0.6.7或更新版本并运行`Utilities/ocpasswordgen/`下的`ocpasswordgen`二进制文件。它会提示你创建一个密码:
 
 ![](../../images/post-install/security-md/ocpasswordgen.png)
 
-For this example, we chose `Dortania` as the password. `ocpasswordgen` then popped out 2 important values we need for our config.plist:
+在这个例子中，我们选择`Dortania`作为密码。然后`ocpasswordgen`弹出了我们config.plist需要的两个重要值:
 
-* PasswordHash: Hash of the password
-* PasswordSalt: Ensures 2 users with the exact same password do not do not have the same hash
+* PasswordHash: 密码哈希值
+* PasswordSalt: 确保2个具有完全相同密码的用户不具有相同的哈希值
 
-Next let's open our config.plist and add these values to Misc -> Security:
+接下来让我们打开config.plist，并将这些值添加到Misc -> Security:
 
-* Note: Don't forget to also enable `EnablePassword`
+* 注意:不要忘记启用`EnablePassword`
 
 ![](../../images/post-install/security-md/password-config.png)
 
-Once these changes have been made, you can save and reboot the machine. Now when you enter OpenCore's menu, you should receive a prompt:
+完成这些更改后，您可以保存并重新启动机器。现在，当你进入OpenCore的菜单时，你应该会收到一个提示:
 
 ![](../../images/post-install/security-md/password-demo.png)
 
-Enter your password and you should get your regular boot options:
+输入你的密码，你应该会得到你的常规启动选项:
 
-* Note: Between typing the password and entering the menu, some older machines and VMs can take 30 seconds+ to finish verification. Please be patient
+* 注意:在输入密码和进入菜单之间，一些较旧的机器和虚拟机可能需要30秒以上才能完成验证。请耐心点
 
 ![](../../images/post-install/security-md/password-done.png)
