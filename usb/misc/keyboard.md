@@ -1,56 +1,56 @@
-# Keyboard Wake Issues
+# 键盘唤醒问题
 
-So an odd bug with Intel's 100 series chipsets and newer is that sometimes macOS requires a second keyboard press or some other wake event to power up the monitor as well, with some requiring a keypress+power button to wake. Well to fix this, we need to either:
+因此，英特尔的100系列及更新的芯片组有一个奇怪的bug，即有时macOS需要第二次按键盘或其他唤醒事件来启动显示器，有些需要按键+电源按钮才能唤醒。要解决这个问题，我们需要:
 
-* [Set `acpi-wake-type` to the USB Controller(Recommended)](#method-1-add-wake-type-property-recommended)
-* [Create a fake ACPI Device](#method-2-create-a-fake-acpi-device)
-* [Disable darkwake(not ideal, as background tasks will also turn on the display)](#method-3-configuring-darkwake)
+* [将`acpi-wake-type`设置为USB控制器(推荐)](#method-1-add-wake-type-property-recommended)
+* [创建一个假ACPI设备](#method-2-create-a-fake-acpi-device)
+* [禁用darkwake(不理想，因为后台任务也会打开显示)](#method-3-configuring-darkwake)
 
-You can find a great write up on the whole situation and the fixes here: [USB Fix](https://osy.gitbook.io/hac-mini-guide/details/usb-fix).
+你可以在这里找到关于整个情况和修复的伟大的文章:[USB修复](https://osy.gitbook.io/hac-mini-guide/details/usb-fix).
 
-It's an excellent read and highly recommend to truly understand *what* is exactly happening, and it's not like you've done enough reading already with this guide ;p
+这是一本优秀的读物，强烈推荐你去真正理解**到底发生了什么**，而且这篇指南似乎还没有让你读够
 
-## Method 1 - Add Wake Type Property (Recommended)
+## 方法1 -添加唤醒类型属性(推荐)
 
-So the ideal method is to declare the XHCI Controller(This is our USB Controller) to be an ACPI wake device, as we don't have compatible ECs for macOS to handle proper wake calls.
+因此，理想的方法是将XHCI控制器(这是我们的USB控制器)声明为ACPI唤醒设备，因为我们没有macOS的兼容ec来处理正确的唤醒调用。以上翻译结果来自有道神经网络翻译（YNMT）· 通用领域
 
-To start,  we'll need to grab the PciRoot of our USB Controller(we'll use [gfxutil](https://github.com/acidanthera/gfxutil/releases), Generally the names would be XHC, XHC1 and XHCI)
+首先，我们需要获取USB控制器的PciRoot(我们将使用[gfxutil](https://github.com/acidanthera/gfxutil/releases)，通常名称是XHC, XHC1和XHCI)
 
 ![](../../images/post-install/usb-md/xhci-path.png)
 
-Now with the PciRoot, open your config.plist and add a new entry under DeviceProperties -> Add, and add your PciRoot. Then create a child with the following attributes:
+现在使用PciRoot，打开您的config.plist，并在DeviceProperties -> add下添加一个新条目，并添加您的PciRoot。然后创建一个具有以下属性的子节点:
 
 `acpi-wake-type | Data | <01>`
 
 ![](../../images/post-install/usb-md/deviceproperties.png)
 
-## Method 2 - Create a fake ACPI Device
+## 方法2 -创建一个假ACPI设备
 
-This method creates a fake ACPI Device that will be associated with the GPE, then add the property of `acpi-wake-type` with USBWakeFixup.kext.
+这个方法创建一个与GPE关联的假ACPI设备，然后用USBWakeFixup.kext添加`ACPI-wake-type`属性。
 
-It's actually quite easy to setup, you'll need the following:
+它实际上很容易设置，你将需要以下内容:
 
 * [USBWakeFixup.kext](https://github.com/osy86/USBWakeFixup/releases)
-  * Both under EFI/OC/Kexts and your config.plist
+  * 在EFI/OC/ kext和config.plist下
 * [SSDT-USBW.dsl](https://github.com/osy86/USBWakeFixup/blob/master/SSDT-USBW.dsl)
 
-To create the SSDT-USBW for your specific system, you're gonna need the ACPI path of your USB controller. If we look back above to the gfxutil example, we can see it also lists our ACPI path:
+要为特定的系统创建SSDT-USBW，需要USB控制器的ACPI路径。如果我们回顾上面的gfxutil示例，我们可以看到它还列出了我们的ACPI路径:
 
 * `/PC00@0/XHCI@14` -> `\_SB.PC00.XHCI`
 
-Now we can shove that into our SSDT:
+现在我们可以把它塞进我们的SSDT:
 
 ![](../../images/post-install/usb-md/usbw.png)
 
-Now with that done, you can compile and add it to your EFI and config.plist. See [Getting Started With ACPI](https://sumingyd.github.io/Getting-Started-With-ACPI/Manual/compile.html) for more info on compiling SSDTs
+现在，您可以编译并将其添加到您的EFI和config.plist中。有关编译ssdt的更多信息，请参见[ACPI入门](https://sumingyd.github.io/Getting-Started-With-ACPI/Manual/compile.html)
 
-## Method 3 - Configuring darkwake
+## 方法3 -配置darkwake
 
-Before we get deep into configuring darkwake, it would be best to explain what darkwake is. A great in-depth thread by holyfield can be found here: [DarkWake on macOS Catalina](https://www.insanelymac.com/forum/topic/342002-darkwake-on-macos-catalina-boot-args-darkwake8-darkwake10-are-obsolete/)
+在我们深入配置darkwake之前，最好解释一下什么是darkwake。霍利菲尔德的一篇深度文章可以在这里找到:[DarkWake on macOS Catalina](https://www.insanelymac.com/forum/topic/342002-darkwake-on-macos-catalina-boot-args-darkwake8-darkwake10-are-obsolete/)
 
-In its simplest form, you can think of darkwake as "partial wake", where only certain parts of your hardware are lit up for maintenance tasks while others remain asleep(ie. Display). Reason we may care about this is that darkwake can add extra steps to the wake process like keyboard press, but outright disabling it can make our hack wake randomly. So ideally we'd go through the below table to find an ideal value.
+在其最简单的形式中，您可以将darkwake视为“部分唤醒”，在这种情况下，只有硬件的某些部分为维护任务而亮起，而其他部分则处于睡眠状态(例如:显示)。我们关心这一点的原因可能是，darkwake可以在唤醒过程中添加额外的步骤，如按键盘，但直接禁用它会使我们的黑苹果唤醒随机。所以理想情况下，我们会通过下表找到一个理想值。
 
-Now lets take a look at [IOPMrootDomain's source code](https://opensource.apple.com/source/xnu/xnu-6153.81.5/iokit/Kernel/IOPMrootDomain.cpp.auto.html):
+现在让我们看一下[IOPMrootDomain的源代码](https://opensource.apple.com/source/xnu/xnu-6153.81.5/iokit/Kernel/IOPMrootDomain.cpp.auto.html):
 
 ```cpp
 // gDarkWakeFlags
@@ -65,29 +65,29 @@ enum {
 };
 ```
 
-Now lets go through each bit:
+现在让我们逐一检查每一位:
 
 | Bit | Name | Comment |
 | :--- | :--- | :--- |
-| 0 | N/A |  Supposedly disables darkwake |
-| 1 | HID Tickle Early | Helps with wake from lid, may require pwr-button press to wake in addition |
-| 2 | HID Tickle Late | Helps single keypress wake but disables auto-sleep |
-| 3 | HID Tickle None | Default darkwake value if none is set|
-| 3 | HID Tickle Mask | To be paired with other |
-| 256 | Alarm Is Dark | To be explored |
-| 512 | Graphics Power State 1 | Enables wranglerTickled to wake fully from hibernation and RTC |
-| 1024 | Audio Not Suppressed | Supposedly helps with audio disappearing after wake |
+| 0 | N/A |  据说会使darkwake失效 |
+| 1 | HID Tickle Early | 帮助从盖子唤醒，另外可能需要电源按钮按下唤醒 |
+| 2 | HID Tickle Late | 帮助单按键唤醒，但禁用自动休眠 |
+| 3 | HID Tickle None | 如果设置为none，则默认darkwake值|
+| 3 | HID Tickle Mask | 配对:与其他配对 |
+| 256 | Alarm Is Dark | 有待探索 |
+| 512 | Graphics Power State 1 | 使wranglerTickled完全从休眠和RTC唤醒 |
+| 1024 | Audio Not Suppressed | 据说有助于消除醒来后的声音消失 |
 
-* Note that HID = Human-interface devices(Keyboards, mice, pointing devices, etc)
+* 注意HID =人机界面设备(键盘、鼠标、指针设备等)
 
-To apply the above table to your system, it's as simple as grabbing calculator, adding up your desired darkwake values and then applying the final value to your boot-args. However we recommend trying 1 at a time rather than merging all at once, unless you know what you're doing(though you likely wouldn't be reading this guide).
+要将上述表格应用于您的系统，就像获取计算器一样简单，将所需的darkwake值相加，然后将最终值应用于您的启动参数。但是，我们建议每次尝试一个，而不是一次合并所有，除非你知道你在做什么(尽管你可能不会阅读这篇指南)。
 
-For this example, lets try and combine `kDarkWakeFlagHIDTickleLate` and `kDarkWakeFlagGraphicsPowerState1`:
+对于这个例子，让我们尝试组合`kdarkwakeflaghidtickklelate`和`kDarkWakeFlagGraphicsPowerState1`:
 
 * `2`= kDarkWakeFlagHIDTickleLate
 * `512`= kDarkWakeFlagAudioNotSuppressed
 
-So our final value would be `darkwake=514`, which we can next place into boot-args:
+所以我们的最终值是`darkwake=514`，我们可以把它放到引导参数中:
 
 ```
 NVRAM
@@ -96,9 +96,9 @@ NVRAM
     |---boot-args | Sting | darkwake=514
 ```
 
-The below is more for clarification for users who are already using darkwake or are looking into it, specifically clarifying what values no longer work:
+下面更多是为了澄清已经使用darkwake或正在研究它的用户，特别是澄清哪些值不再工作:
 
-* `darkwake=8`: This hasn't been in the kernel since [Mavericks](https://opensource.apple.com/source/xnu/xnu-2422.115.4/iokit/Kernel/IOPMrootDomain.cpp.auto.html)
-  * Correct boot-arg would be `darkwake=0`
-* `darkwake=10`: This hasn't been in the kernel since [Mavericks](https://opensource.apple.com/source/xnu/xnu-2422.115.4/iokit/Kernel/IOPMrootDomain.cpp.auto.html)
-  * Correct boot-arg would be `darkwake=2`
+* `darkwake=8`: 自从[Mavericks](https://opensource.apple.com/source/xnu/xnu-2422.115.4/iokit/Kernel/IOPMrootDomain.cpp.auto.html)之后，内核中就没有这个功能了。
+  * 正确的引导参数是`darkwake=0`
+* `darkwake=10`: 自从[Mavericks](https://opensource.apple.com/source/xnu/xnu-2422.115.4/iokit/Kernel/IOPMrootDomain.cpp.auto.html)之后，内核中就没有这个功能了。
+  * 正确的引导参数是`darkwake=2`
