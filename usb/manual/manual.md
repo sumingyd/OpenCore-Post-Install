@@ -1,72 +1,72 @@
-# USB Mapping
+# USB映射
 
-So with the prerequisites out of the way, we can finally get to the meat of this guide. And now we get to finally read one of my favorite books before I go to bed each night: [The Advanced Configuration and Power Interface (ACPI) Specification!](https://uefi.org/specs/ACPI/6.4/)
+因此，有了先决条件，我们终于可以开始这篇指南的核心内容了。现在我们终于可以在每晚睡觉前读一本我最喜欢的书:[高级配置和电源接口(ACPI)规范!](https://uefi.org/specs/ACPI/6.4/)
 
-Now if you haven't read through this before(which I highly recommend you do, it's a thrilling tale), I'll point you to the meat of the USB situation:
+现在，如果你之前没有读过这篇文章(我强烈建议你读，这是一个激动人心的故事)，我将向你指出USB的主要情况:
 
-* Section 9.14: _UPC (USB Port Capabilities)
+* 第9.14节:_UPC (USB端口能力)
 
-Here we're greeted with all the possible USB ports in ACPI:
+在这里，我们可以看到ACPI中所有可能的USB端口:
 
-| Type | Info | Comments |
+| 类型 | 信息 | 说明 |
 | :--- | :--- | :--- |
-| 0 | USB 2.0 Type-A connector | This is what macOS will default all ports to when no map is present |
-| 3 | USB 3.0 Type-A connector | 3.0, 3.1 and 3.2 ports share the same Type |
-| 8 | Type C connector - USB 2.0-only | Mainly seen in phones
-| 9 | Type C connector - USB 2.0 and USB 3.0 with Switch | Flipping the device **does not** change the ACPI port |
-| 10 | Type C connector - USB 2.0 and USB 3.0 without Switch | Flipping the device **does** change the ACPI port. generally seen on 3.1/2 motherboard headers |
-| 255 | Proprietary connector | For Internal USB ports like Bluetooth |
+| 0 | USB 2.0 Type-A连接器 | 这是macOS在没有映射时默认的所有端口 |
+| 3 | USB 3.0 Type-A连接器 | 3.0、3.1和3.2端口共享相同的类型 |
+| 8 | Type C连接器 - 仅支持USB 2.0 | 主要用于手机
+| 9 | Type C连接器 - USB 2.0和USB 3.0和开关 | 翻转设备**不会**改变ACPI端口 |
+| 10 | Type C连接器 - USB 2.0和USB 3.0无开关 | 翻转设备**会**改变ACPI端口。一般见于3.1/2主板头 |
+| 255 | 专用连接器 | 用于内部USB端口，如蓝牙 |
 
-## USB Mapping: The manual way
+## USB映射:手动方式
 
-This section is for those who want to get down into the meats of their hackintosh, to really understand what it's doing and help if there's any issues with USBmap.py and other mapping tools. To start, we'll need a few things:
+本节是为那些想深入了解黑苹果的人准备的，他们可以真正了解它在做什么，并在USBmap.py和其他映射工具有任何问题时提供帮助。首先，我们需要一些东西:
 
-* Installed version of macOS
-  * This is due to how macOS enumerates ports, trying to map from other OSes makes this difficult
-  * Note: This guide will be focusing on OS X 10.11, El Capitan and newer. Older OSes shouldn't require any USB mapping
-* Non-conflicting USB names
-  * See previous section: [Checking what renames you need](../system-preparation.md#checking-what-renames-you-need)
-* A USB 2.0 and USB 3.0 device to test with
-  * You must have 2 separate devices as to ensure no mix ups with personalities
+* macOS的安装版本
+  * 这是由于macOS枚举端口的方式，试图从其他操作系统映射会使这变得困难
+  * 注:本指南将集中在OS X 10.11, El Capitan和更新。旧的操作系统不需要任何USB映射
+* 无冲突的USB名称
+  * 请参阅上一节:[检查你需要的重命名](../system-preparation.md#checking-what-renames-you-need)
+* 用于测试的USB 2.0和USB 3.0设备
+  * 你必须有两个独立的设备，以确保映射的时候系统不会混淆
 * [IORegistryExplorer.app](https://github.com/khronokernel/IORegistryClone/blob/master/ioreg-302.zip)
-  * To view the inner workings of macOS more easily
-  * If you plan to use Discord for troubleshooting, [v2.1.0](https://github.com/khronokernel/IORegistryClone/blob/master/ioreg-210.zip) is a bit easier on file size.
+  * 更容易查看macOS的内部工作原理
+  * 如果您计划使用Discord进行故障排除，[v2.1.0](https://github.com/khronokernel/IORegistryClone/blob/master/ioreg-210.zip)在文件大小上分辨会更容易一些。
 * [USBInjectAll](https://bitbucket.org/RehabMan/os-x-usb-inject-all/downloads/)
-  * This is only required for older USB controllers like Broadwell and older, however some Coffee Lake systems may still require it
-  * **Reminder** this kext does not work on AMD
+  * 这在较旧的USB控制器才需要，如Broadwell和更旧的，但是一些Coffee Lake系统可能仍然需要它
+  * **提示**这个kext不能在AMD上工作
 * [Sample-USB-Map.kext](https://github.com/dortania/OpenCore-Post-Install/blob/master/extra-files/Sample-USB-Map.kext.zip)
 * [ProperTree](https://github.com/corpnewt/ProperTree)
-  * Or any other plist editor
+  * 或任何其他plist编辑器
   
-Now with all this out of the way, lets get to USB mapping!
+现在，所有这些都解决了，让我们进入USB映射!
 
-## Finding your USB ports
+## 找到你的USB端口
 
-Lets open our previously downloaded [IORegistryExplorer.app](https://github.com/khronokernel/IORegistryClone/blob/master/ioreg-302.zip) and search for our USB controller(s).
+让我们打开之前下载的[IORegistryExplorer.app](https://github.com/khronokernel/IORegistryClone/blob/master/ioreg-302.zip)并搜索我们的USB控制器。
 
-The 2 main search terms are `XHC` and `EHC`, but if you have a legacy board with UHCI or OHCI controllers you'll need to adjust. A blanket `USB` search may show too many entries and confuse you.
+两个主要的搜索词是 `XHC` 和 `EHC`, 但如果你有一个带有UHCI或OHCI控制器的 legacy 板，你就需要调整。一个笼统的 `USB` 搜索可能会显示太多的条目，让你感到困惑。
 
-For this example, lets try and map an Asus X299-E Strix board:
+对于这个例子，让我们尝试映射华硕X299-E Strix主板:
 
 ![](../../images/post-install/manual-md/initial-boot.png)
 
-From the above image we can see 3 USB controllers:
+从上图中我们可以看到3个USB控制器:
 
-* PXSX(1, Top)
-* PXSX(2, Middle)
-* XHCI(3, Bottom)
+* PXSX(1, 上)
+* PXSX(2, 中)
+* XHCI(3, 下)
 
-Pay attention that they're individual controllers, as this means **each USB controller has it's own port limit**. So you're not as starved for USB ports as you may think.
+请注意，它们是独立的控制器，因为这意味着**每个USB控制器都有自己的端口限制**。所以你并不像你想的那样渴望USB端口。
 
-Now I personally know which USB controllers match up with which physical ports, problem is it's not always as obvious which ports match with which controllers. So lets try to figure out which is what.
+现在我个人知道哪个USB控制器匹配哪个物理端口，问题是它并不总是那么明显的哪个端口匹配哪个控制器。所以我们试着找出哪个是什么。
 
-**Note**: The AppleUSBLegacyRoot entry is an entry that lists all active USB controllers and ports, these are not USB controllers themselves so you can outright ignore them.
+**注意**:AppleUSBLegacyRoot项列出了所有活动的USB控制器和端口，这些不是USB控制器本身，所以你可以直接忽略它们。
 
-**Note 2**: Keep in mind every motherboard model will have a unique set of port combos, controller types and names. So while our example uses PXSX, yours might have the XHC0 or PTCP name. And quite common on older motherboards is that you may only have 1 controller, this is alright so don't stress about having the exact same setup as the example.
+**注2**:请记住，每个主板型号都有一组独特的端口组合、控制器类型和名称。因此，虽然我们的示例使用PXSX，但您的示例可能有XHC0或PTCP名称。在较老的主板上很常见的是，你可能只有一个控制器，这是好的，所以不要强调和例子有完全相同的设置。
 
-Common names you can check:
+你可以查看常用的名称:
 
-* USB 3.x controllers:
+* USB 3.x 控制器:
   * XHC
   * XHC0
   * XHC1
@@ -75,225 +75,225 @@ Common names you can check:
   * XHCX
   * AS43
   * PTXH
-    * Commonly associated with AMD Chipset controllers
+    * 通常与AMD芯片组控制器相关
   * PTCP
-    * Found on AsRock X399
+    * 在AsRock X399上找到
   * PXSX
-    * This is a generic PCIe device, **double check it's a USB device** as NVMe controllers and other devices can use the same name.
-* USB 2.x controllers:
+    * 这是一个通用的PCIe设备，**仔细检查它是否是USB设备**，因为NVMe控制器和其他设备可以使用相同的名称。
+* USB 2.x 控制器:
   * EHCI
   * EHC1
   * EHC2
   * EUSB
   * USBE
 
-### Finding which ports match with which controller
+### 找出哪个端口与哪个控制器匹配
 
-To start, I'm going to plug a USB device into my front USB 3.1(Type-A) and 3.2(Type-C):
+首先，我要把一个USB设备插入我的USB 3.1(a型)和USB 3.2(c型):
 
 ![](../../images/post-install/manual-md/front-io-plugged.png)
 
-Next lets look at IOReg, and we can see where our USB devices fell:
+接下来让我们看看IOReg，我们可以看到我们的USB设备出现在哪里:
 
 | USB-C | USB-A |
 | :--- | :--- |
 | ![](../../images/post-install/manual-md/usb-c-test.png) | ![](../../images/post-install/manual-md/usb-a-test-3.png) |
 
-Here we see a few things:
+在这里我们看到了一些东西:
 
-* Front 3.2 Type-C is on the PXSX(2, middle) Controller
-* Front 3.1 Type-A is on the XHCI(3, Bottom) Controller
+* 前3.2类型-c在PXSX(2，中间)控制器上
+* 前3.1类型-a在XHCI(3，底部)控制器上
 
-Now that we have an idea of which ports go to which controller, can can now look into how we USB map.
+现在我们已经知道了哪个端口连接到哪个控制器，现在可以看看我们如何映射USB了。
 
-### USB-A mapping
+### USB-A 映射
 
-As mentioned before, USB 3.x ports are split into 2 personalities: USB 2.0 and USB 3.0. This is to ensure backwards compatibility but macOS itself has difficulties determining which personalities match up to which ports. That's where we come in to help.
+如前所述，usb3.x端口分为两种类型:usb2.0和usb3.0。这是为了确保向后兼容，但macOS本身很难确定哪些特型与哪些端口匹配。这就是我们要提供帮助的地方。
 
-So lets take our USB-A port, when we plug in a USB 3.0 device into it we see `XHCI -> SS03` light up. This is the USB 3.0 personality of the port. Now we'll want to plug a USB 2.0 device into that port:
+所以让我们使用USB-a端口，当我们将USB 3.0设备插入它时，我们看到`XHCI -> SS03`亮起。这是端口的USB 3.0特性。现在我们要在该端口上插入USB 2.0设备:
 
-| 3.0 Personality | 2.0 Personality |
+| 3.0 特型 | 2.0 特型 |
 | :--- | :--- |
 | ![](../../images/post-install/manual-md/usb-a-test-4.png) | ![](../../images/post-install/manual-md/usb-a-test-2.png) |
 
-We see that the USB 2.0 personality of our 3.0 port is `XHCI -> HS03`, now you should be able to get an idea of what we're trying to do:
+我们看到我们的3.0端口的USB 2.0特性是`XHCI -> HS03`，现在你应该能够了解我们试图做什么:
 
-* Front Type-A:
-  * HS03: 2.0 Personality
-  * SS03: 3.0 Personality
+* 正面a型:
+  * HS03: 2.0特型
+  * SS03: 3.0特型
 
-**Note**: If your USB ports show up as either AppleUSB20XHCIPort or AppleUSB30XHCIPort, you can still map however it will be a bit more difficult. Instead of writing down the names, pay very close attention to the `port` property on the right hand side:
+**注意**:如果你的USB端口显示为AppleUSB20XHCIPort或AppleUSB30XHCIPort，你仍然可以映射，但是会有点困难。与其把名字写下来，不如密切关注右边的`port`属性:
 
 ![](../../images/post-install/manual-md/location-id.png)
 
-### Creating a personal map
+### 创建个人地图
 
-This is where we pull out pen and paper, and start to write down which ports physically match up with which digital ports. An example of what your map can look like:
+这就是我们拿出笔和纸，开始写下哪个端口与哪个数字端口相匹配的地方。你的地图可能看起来像这样的一个例子:
 
-| Name Mapping | Property Mapping |
+| 名称映射 | 属性映射 |
 | :--- | :--- |
 | ![](../../images/post-install/manual-md/front-io-diagram.png) | ![](../../images/post-install/manual-md/full-diagram-port.png) |
 
-Your own map doesn't need to look exactly like this, however you'll want something that you can easily understand and refer to down the line.
+你自己的地图不需要完全像这样，但是你需要一些你很容易理解和参考的东西。
 
-Note:
+注意:
 
-* Name Mapping: When a proper name shows up in IOReg(ie. HS01)
-* Property Mapping: When no proper name is given(ie. AppleUSB30XHCIPort)
+* 名称映射:当一个正确的名称在IOReg中显示时(例如:HS01)
+* 属性映射:当没有给出合适的名称时(例如:AppleUSB30XHCIPort）
 
-### USB-C mapping
+### USB-C映射
 
-Next lets map our USB-C port, this is where it gets quite tricky as you may have noticed earlier:
+接下来映射我们的USB-C端口，这是非常棘手的地方，你可能已经注意到了:
 
-| Type | Info | Comments |
+| 类型 | 信息 | 说明 |
 | :--- | :--- | :--- |
-| 8 | Type C connector - USB 2.0-only | Mainly seen in phones |
-| 9 | Type C connector - USB 2.0 and USB 3.0 with Switch | Flipping the device **does not** change the ACPI port |
-| 10 | Type C connector - USB 2.0 and USB 3.0 without Switch | Flipping the device **does** change the ACPI port. generally seen on 3.1/2 motherboard headers |
+| 8 | Type C连接器 - 仅支持USB 2.0的 | 主要见于手机 |
+| 9 | Type C连接器 - USB 2.0和USB 3.0带开关 | 翻动设备**不**改变ACPI接口 |
+| 10 | Type C连接器 - USB 2.0和USB 3.0没有开关| | 翻转设备**会**改变ACPI接口。一般见于3.1/2主板头 |
 
-So when we map our USB-C header, we notice it occupies the SS01 port. But when we flip it, we actually populate it on the SS02 port. When this happens, you'll want to write this down for when we apply the port type.
+所以当我们映射我们的USB-C头时，我们注意到它占用了SS01端口。但当我们翻转它时，我们实际上是在SS02端口上填充它。当发生这种情况时，你需要在应用端口类型时将其记录下来。
 
-* Note: All personalities from this port will be put under the Type 10
-* Note 2: Not all USB-C headers will be Type 10, **double check yours**
+* 注意:该端口的所有特型将被置于10型之下
+* 注意2:并非所有USB-C表头都是10，**仔细检查你的表头**
 
 ![](../../images/post-install/manual-md/usb-c-test-2.png)
 
-### Continuing mapping
+### 继续映射
 
-Now that you have the basic idea, you'll want to go around with every USB port and map it out. This will take time, and don't forget to write it down. Your final diagram should look similar to this:
+现在您已经有了基本的想法，您将需要到处查看每个USB端口并将其映射出来。这需要时间，别忘了把它写下来。最终的图表应该类似于下面这样:
 
 ![](../../images/post-install/manual-md/full-diagram.png)
 
 ### Special Notes
 
-* [Bluetooth](#bluetooth)
-* [USRx Ports](#usrx-ports)
-* [Missing USB Ports](#missing-usb-ports)
+* [蓝牙](#bluetooth)
+* [USRx端口](#usrx-ports)
+* [没有 USB 端口](#missing-usb-ports)
 
-#### Bluetooth
+#### 蓝牙
 
-So while not obvious to many, Bluetooth actually runs over the USB interface internally. This means that when mapping, you'll need to pay close attention to devices that already show up in IOReg:
+所以，虽然对很多人来说并不明显，但蓝牙实际上是在内部通过USB接口运行的。这意味着在映射时，你需要密切关注IOReg中已经显示的设备:
 
 ![](../../images/post-install/manual-md/bluetooth.png)
 
-Keep this in mind, as this plays into the Type 255 and getting certain services like handoff working correctly.
+请记住这一点，因为这是255类型，并使某些服务(如切换)正常工作。
 
-#### USRx Ports
+#### USRx端口
 
-When mapping, you may notice some extra ports left over, specifically USR1 and USR2. These ports are known as "USBR" ports, or more specifically [USB Redirection Ports](https://software.Intel.com/content/www/us/en/develop/documentation/amt-developer-guide/top/storage-redirection.html). Use of these is for remote management but real Macs don't ship with USBR devices and so has no support for them OS-wise. You can actually ignore these entries in your USB map:
+在映射时，您可能会注意到一些剩余的端口，特别是USR1和USR2。这些端口被称为“USBR”端口，或者更具体地说是[USB重定向端口](https://software.Intel.com/content/www/us/en/develop/documentation/amt-developer-guide/top/storage-redirection.html).使用这些设备是为了进行远程管理，但真正的mac没有附带USBR设备，所以在操作系统方面没有对它们的支持。实际上，你可以忽略USB映射表中的这些条目:
 
 ![](../../images/post-install/manual-md/usr.png)
 
-#### Missing USB ports
+#### 缺少USB接口
 
-In some rare situations, certain USB ports may not show up in macOS at all. This is likely due to a missing definition in your ACPI tables, and so we have a few options:
+在一些罕见的情况下，某些USB端口可能根本不显示在macOS中。这可能是由于您的ACPI表中缺少定义，因此我们有几个选择:
 
-* Coffee Lake and older should use [USBInjectAll](https://github.com/Sniki/OS-X-USB-Inject-All/releases)
-  * Don't forget to add this to both EFI/OC/Kexts and you config.plist's kernel -> Add
-* Comet Lake and newer should use SSDT-RHUB
-* AMD systems should also use SSDT-RHUB
+* Coffee Lake 及以上应使用 [USBInjectAll](https://github.com/Sniki/OS-X-USB-Inject-All/releases)
+  * 不要忘记添加到 EFI/OC/Kexts 和你的 config.plist's kernel -> Add中
+* Comet Lake和更新版本应该使用SSDT-RHUB
+* AMD系统也应该使用SSDT-RHUB
 
-SSDT-RHUB's purpose is to reset your USB controller, and force macOS to reenumerate them. This avoids the hassle of trying to patch your existing ACPI tables.
+SSDT-RHUB的目的是重置你的USB控制器，并强制macOS重新枚举它们。这避免了为现有的ACPI表打补丁的麻烦。
 
-To create your own SSDT-RHUB-MAP:
+创建自己的SSDT-RHUB-MAP:
 
-* Grab a copy of the SSDT: [SSDT-RHUB.dsl](https://github.com/dortania/Getting-Started-With-ACPI/blob/master/extra-files/decompiled/SSDT-RHUB.dsl)
-* Grab [maciASL](https://github.com/acidanthera/MaciASL/releases/tag/1.5.7)
+* 获取SSDT副本: [SSDT-RHUB.dsl](https://github.com/dortania/Getting-Started-With-ACPI/blob/master/extra-files/decompiled/SSDT-RHUB.dsl)
+* 获取 [maciASL](https://github.com/acidanthera/MaciASL/releases/tag/1.5.7)
 
-Next, open our newly downloaded SSDT with maciASL, you should be presented with the following:
+接下来，用maciASL打开我们新下载的SSDT，你应该会看到以下内容:
 
 ![](../../images/post-install/manual-md/ssdt-rhub-normal.png)
 
-Now, open IOReg and find the USB controller you want to reset(pay very close attention its the USB controller and not the child RHUB with the same name):
+现在，打开IOReg并找到你想要重置的USB控制器(注意，它是USB控制器，而不是同名的子RHUB):
 
-If you look to the right side, you should see the `acpi-apth` property. Here we're going to need to translate it to something our SSDT can use:
+如果你看右边，你应该会看到`acpi-apth`属性。这里我们需要把它翻译成我们的SSDT可以使用的东西:
 
 ```sh
-# before modifying
+# 修改前
 IOService:/AppleACPIPlatformExpert/PC00@0/AppleACPIPCI/RP05@1C,4/IOPP/PXSX@0
 ```
 
-Now we'll want to strip out any unnecessary data:
+现在我们要去掉所有不必要的数据:
 
 * `IOService:/AppleACPIPlatformExpert/`
 * `@##`
 * `IOPP`
 
-Once cleaned up, yours should look similar:
+一旦清理干净，你的应该看起来类似:
 
 ```sh
-# After modifying
+# 修改后
 PC00.RP05.PXSX
 ```
 
-Following the example from above, we'll be renaming `PCI0.XHC1.RHUB` to `PC00.RP05.PXSX.RHUB`:
+按照上面的例子，我们将 `PCI0.XHC1.RHUB` 重命名为 `PC00.RP05.PXSX.RHUB`:
 
-**Before**:
+**之前**:
 
 ```
-External (_SB_.PCI0.XHC1.RHUB, DeviceObj) <- Rename this
+External (_SB_.PCI0.XHC1.RHUB, DeviceObj) <- 重命名
 
-Scope (_SB.PCI0.XHC1.RHUB) <- Rename this
+Scope (_SB.PCI0.XHC1.RHUB) <- 重命名
 ```
 
 ![](../../images/post-install/manual-md/ssdt-rhub.png)
 
-Following the example pathing we found, the SSDT should look something like this:
+按照我们找到的示例路径，SSDT应该看起来像这样:
 
-**After**:
+**之后**:
 
 ```
-External (_SB.PC00.RP05.PXSX.RHUB, DeviceObj) <- Renamed
+External (_SB.PC00.RP05.PXSX.RHUB, DeviceObj) <- 重命名
 
-Scope (_SB.PC00.RP05.PXSX.RHUB) <- Renamed
+Scope (_SB.PC00.RP05.PXSX.RHUB) <- 重命名
 ```
 
 ![](../../images/post-install/manual-md/ssdt-rhub-fixed.png)
 
-Once you've edited the SSDT to your USB controller's path, you can export it with `File -> SaveAs -> ACPI Machine Language Binary`:
+一旦你将SSDT编辑到USB控制器的路径下，你就可以使用`File -> SaveAs -> ACPI Machine Language Binary`将其导出:
 
 ![](../../images/post-install/manual-md/ssdt-save.png)
 
-Finally, remember to add this SSDT to both EFI/OC/ACPI and your config.plist under ACPI -> Add.
+最后，请记住将此SSDT添加到 EFI/OC/ACPI 和你 config.plist 中的 ACPI -> Add.
 
-## Creating our kext
+## 创建kext
 
-Its the time you've all been waiting for, we finally get to create our USB map!
+大家期待已久的时间到了，我们终于可以创建我们的USB map了!
 
-First off, we'll want to grab a sample USB map kext:
+首先，我们需要获取一个USB map kext示例:
 
 * [Sample-USB-Map.kext](https://github.com/dortania/OpenCore-Post-Install/blob/master/extra-files/Sample-USB-Map.kext.zip)
 
-Next right click the .kext, and select `Show Package Contents`. then drill down to the info.plist:
+接下来右键单击.kext，并选择“显示包内容”。然后深入到info.plist:
 
-| Show Contents | info.plist |
+| 显示内容 | info.plist |
 | :--- | :--- |
 | ![](../../images/post-install/manual-md/show-contents.png) | ![](../../images/post-install/manual-md/info-plist.png) |
 
-Now lets open ProperTree and look at this info.plist:
+现在让我们打开ProperTree，看看这个info.plist:
 
 ![](../../images/post-install/manual-md/info-plist-open.png)
 
-Here we see a few sections, under `IOKitPersonalities`:
+下面我们看到在`iokitpersonality`下的几个部分:
 
 * RP05 - PXSX(1)
 * RP07 - PXSX(2)
 * XHCI - XHCI
 
-Each entry here represents a USB controller, specifically the map for each controller. The names of the entry don't matter much however, it's more for book keeping so you know which entry to has which USB map.
+这里的每个条目表示一个USB控制器，特别是每个控制器的映射。然而，条目的名称并不重要，它更重要的是为了好记，以便您知道哪个条目有哪个USB映射。
 
-Next lets head into the `RP05 - PXSX(1)` entry:
+接下来让我们进入`RP05 - PXSX(1)`条目:
 
 ![](../../images/post-install/manual-md/rp05-entry.png)
 
-Here we see a few more important properties:
+这里我们看到了一些更重要的属性:
 
 | Property | Comment |
 | :--- | :--- |
-| IOPathMatch | The device macOS will choose to attach the map to |
-| IOProviderClass | The USB driver macOS will choose to attach |
-| model | The SMBIOS the USB map attaches too|
-| IOProviderMergeProperties | The dictionary holding the actual port map |
+| IOPathMatch | macOS将选择将map附加到该设备 |
+| IOProviderClass | macOS将选择附加的USB驱动程序 |
+| model | USB映射也连接了SMBIOS|
+| IOProviderMergeProperties | 保存实际端口映射的字典 |
 
 ### Determining the properties
 
@@ -306,31 +306,31 @@ Determining the value for each property is actually quite straight forward:
 
 #### IOPathMatch
 
-Finding IOPathMatch is super easy, first find the USB controller you want to map and then select the Root HUB(so the PXSX child with the same name as the parent, don't worry it's less confusing when you look at the image):
+找到IOPathMatch非常简单，首先找到你想要映射的USB控制器，然后选择根集线器(所以PXSX子集线器与父集线器同名，不要担心，当你查看图像时，它会减少困惑):
 
 ![](../../images/post-install/manual-md/iopath-match.png)
 
-Now with the PXSX entry selected, simply copy(Cmd+C) and paste it into our info.plist. Your property should look similar to the below:
+现在选择PXSX条目，简单地复制(Cmd+C)并粘贴到我们的info.plist。你的属性应该如下图所示:
 
 ```
 IOService:/AppleACPIPlatformExpert/PC00@0/AppleACPIPCI/RP05@1C,4/IOPP/PXSX@0/PXSX@01000000
 ```
 
-**Note**: Each USB Controller will have a unique IOPathMatch value, keep this in mind if you have multiple controllers of the same name. This Asus X299 board has 2 PXSX USB controllers, so each new USB map dictionary will have a unique entry for IOPathMatch.
+**注意**:每个USB控制器都有一个唯一的IOPathMatch值，如果你有多个同名控制器，请记住这一点。这款Asus X299板有2个PXSX USB控制器，因此每个新的USB map字典将有一个唯一的IOPathMatch条目。
 
 #### IOProviderClass
 
-Finding IOProviderClass is also easy, select the Root-hub once again and look for the CFBundleIdentifier value:
+查找IOProviderClass也很简单，再次选择Root-hub并查找CFBundleIdentifier值:
 
 | IOReg | info.plist |
 | :--- | :--- |
 | ![](../../images/post-install/manual-md/ioproviderclass.png) | ![](../../images/post-install/manual-md/iorpoviderclass-plist.png) |
 
-Now we can't take that value 1-1, instead we need to trim it to the Kext's short name being `AppleUSBXHCIPCI`(So we removed `com.apple.driver.usb.`)
+现在我们不能把这个值设为1-1，而是需要将Kext的短名称改为`AppleUSBXHCIPCI`(因此我们删除了`com.apple.driver.usb.`)。
 
 #### model
 
-If you've forgotten what SMBIOS you're using, you can simply check the top level device in IOReg:
+如果你忘记了你正在使用的SMBIOS，你可以在IOReg中检查顶级设备:
 
 | IOReg | info.plist |
 | :--- | :--- |
@@ -338,84 +338,84 @@ If you've forgotten what SMBIOS you're using, you can simply check the top level
 
 ### IOProviderMergeProperties
 
-Now lets open the IOProviderMergeProperties dictionary:
+现在让我们打开IOProviderMergeProperties字典:
 
 ![](../../images/post-install/manual-md/ioprovidermerge.png)
 
-Here we have a lot of data to work through:
+这里我们有很多数据要处理:
 
-| Property | Comment |
+| 属性 | 说明 |
 | :--- | :--- |
-| name | The name of the USB port's dictionary |
-| port-count | This is the largest port value you're injecting |
-| UsbConnector | This is the type of USB port as mentioned in the ACPI 9.14 section |
-| port | The physical location of your USB port in ACPI |
-| Comment | An optional entry to help you keep track of all your ports |
+| name | USB端口的字典名称 |
+| port-count | 这是要注入的最大端口值 |
+| UsbConnector | 这是ACPI 9.14节中提到的USB端口类型 |
+| port | 您的USB端口在ACPI中的物理位置 |
+| Comment | 一个可选的条目，帮助您备注端口 |
 
 And a reminder of all possible port types:
 
 | Type | Info | Comments |
 | :--- | :--- | :--- |
-| 0 | USB 2.0 Type-A connector | This is what macOS will default all ports to when no map is present |
-| 3 | USB 3.0 Type-A connector | 3.0, 3.1 and 3.2 ports share the same Type |
-| 8 | Type C connector - USB 2.0-only | Mainly seen in phones
-| 9 | Type C connector - USB 2.0 and USB 3.0 with Switch | Flipping the device **does not** change the ACPI port |
-| 10 | Type C connector - USB 2.0 and USB 3.0 without Switch | Flipping the device **does** change the ACPI port. generally seen on 3.1/2 motherboard headers |
-| 255 | Proprietary connector | For Internal USB ports like Bluetooth |
+| 0 | USB 2.0 Type-A连接器 | 这是macOS在没有映射时默认的所有端口 |
+| 3 | USB 3.0 Type-A连接器 | 3.0、3.1和3.2端口共享相同的类型 |
+| 8 | Type C连接器 - 仅支持USB 2.0 | 主要出现在手机上
+| 9 | Type C连接器 - USB 2.0和USB 3.0带开关 | 翻转设备**不会**改变ACPI端口 |
+| 10 | Type C连接器 - USB 2.0和USB 3.0不带开关 | 翻转设备**会**改变ACPI端口。通常可以在3.1/2主板标头上看到 |
+| 255 | 专用连接器 | 用于内部USB端口，如蓝牙 |
 
-It should be coming full circle now, as you can see how our previous work with mapping out our ports works.
+现在应该回到原点了，你可以看到我们之前映射端口的工作方式。
 
-#### Name
+#### name
 
-The name property is actually the name of the USB port's dictionary, and is used solely for house keeping. Keep in mind every USB port you want to use needs to have its own unique USB port dictionary.
+name属性实际上是USB端口字典的名称，仅用于内部维护。记住，你想使用的每个USB端口都需要有自己独特的USB端口字典。
 
-The name itself holds no value besides showing up in IOReg and so this can be whatever you like. To keep this sane, we use the name already given by our ACPI tables(in this case HS01) but the name can be any 4 character entry. However do not go over this 4 char limit, as unintended side effects can happen.
+除了显示在IOReg中，名称本身没有任何值，所以这可以是你喜欢的任何值。为了保持正常，我们使用ACPI表已经给出的名称(在本例中是HS01)，但名称可以是任何4个字符的条目。但是不要超过这4字符限制,会发生意想不到的副作用。
 
-* Note: Those with AppleUSB20XHCIPort or AppleUSB30XHCIPort names for USB ports, you should choose a name easy to identify. On Intel, this is HSxx for 2.0 personalities and SSxx for 3.0 personalities
+* 注意:那些带有AppleUSB20XHCIPort或AppleUSB30XHCIPort名称的USB端口，你应该选择一个易于识别的名称。在英特尔，这是HSxx为2.0特型，SSxx为3.0特型
 
 ![](../../images/post-install/manual-md/name.png)
 
 #### port
 
-To find the `port` value, simply select your USB port in IOReg and look for the `port` entry:
+要找到`port`值，只需在IOReg中选择你的USB端口并查找`port`条目:
 
 | IOReg | info.plist |
 | :--- | :--- |
 | ![](../../images/post-install/manual-md/port.png) | ![](../../images/post-install/manual-md/port-plist.png) |
 
-From here we get `<03 00 00 00>`, you can simply remove any spaces and add it to your USB map
+从这里我们得到`<03 00 00 00>`，你可以简单地删除任何空格并将其添加到你的USB映射中
 
-#### port-count
+#### 端口数
 
-The final value remaining, look back at your USB map and see which `port` entry is the largest:
+最后剩下的值，回头看看你的USB映射表，看看哪个`port`条目最大:
 
 ![](../../images/post-install/manual-md/port-count.png)
 
-Here we see the largest in PXSX(1) is `<04000000>`, do keep in mind that `port` uses hexadecimal if you get any letters in your USB map.
+这里我们看到PXSX(1)中最大的是`<04000000>`，请记住，如果您在USB map中获得任何字母，`port`使用十六进制。
 
-### Continuing on
+### 继续
 
-Now that we've gone over how to map your USB ports for a specific controller, you should have enough understanding to map more controllers. The sample USB-Map.kext I provided has 3 USB controllers listed in it(PXSX-1, PXSX-2 and XHCI). Remember to edit accordingly and to remove any unnecessary maps.
+现在我们已经讨论了如何为特定的控制器映射USB端口，您应该有足够的理解来映射更多的控制器。我提供的示例USB-map.kext有3个USB控制器列在其中(PXSX-1, PXSX-2和XHCI)。记得相应地编辑并删除任何不必要的映射。
 
-## Cleaning up
+## 清理
 
-Once your saved your USB map's info.plist, remember to add the kext to both your EFI/OC/Kexts and under you config.plist's Kernel -> Add(ProperTree's snapshot can do this for you)
+一旦你保存了你的USB地图的 info.plist, 记得添加kext到你的 EFI/OC/Kexts 并添加到config.plist的 Kernel -> Add(ProperTree的快照可以为你做这件事)
 
-Next, remove/disable:
+接下来，删除/禁用:
 
-* USBInjectAll.kext(if you're using it)
-  * Reason for this is USBInjectAll actually breaks how Apple builds port maps. So while it's great for initial port mapping, it can break you final USB map
+* USBInjectAll.kext(如果你正在使用它)
+  * 原因是USBInjectAll实际上破坏了Apple构建端口映射的方式。因此，虽然它对于初始端口映射很好，但它可能会破坏你最终的USB映射
 * Kernel -> Quirks -> XhciPortLimit -> False
-  * Now that we're finally under the 15 port limit, we no longer need this hacky fix
+  * 现在我们终于低于15个端口的限制，我们不再需要这个黑客式的修复
 
-Then reboot, and check IOReg one last time:
+然后重新启动，最后一次检查IOReg:
 
 ![](../../images/post-install/manual-md/finished.png)
 
-Voila! As you can see, our USB map applied successfully!
+瞧!如你所见，我们的USB地图应用成功!
 
-The main properties to verify are:
+需要验证的主要属性是:
 
-* Correct UsbConnector property on your USB ports
-* Comment applied(if injected)
-* Unused ports were removed
+* 正确设置Usb接口的Usb连接器属性
+* 应用注释(如果注入)
+* 移除未使用的端口

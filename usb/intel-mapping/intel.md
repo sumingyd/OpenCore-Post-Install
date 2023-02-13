@@ -1,6 +1,6 @@
-# USB Mapping
+# USB映射
 
-### This guide is  outdated, see [USBMap's README](https://github.com/corpnewt/USBMap) for updated information until this guide is rewritten
+### 本指南已过时，请参阅[USBMap的README](https://github.com/corpnewt/USBMap)了解更新信息，直到本指南被重写
 
 Table of Contents:
 
