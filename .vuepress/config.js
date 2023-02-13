@@ -164,7 +164,7 @@ module.exports = {
                     sidebarDepth: 2,
                     children: [
                         ['/universal/security/filevault', '文件库'],
-                        ['/universal/security/vault', '库'],
+                        ['/universal/security/vault', '保险库'],
                         ['/universal/security/scanpolicy', '扫描策略'],
                         ['/universal/security/password', 'OpenCore菜单密码'],
                         ['/universal/security/applesecureboot', '苹果安全引导'],
