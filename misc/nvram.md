@@ -1,86 +1,86 @@
-# Emulated NVRAM
+# 模拟NVRAM
 
-::: danger
+::: danger 危险
 
-This is not up to date for OpenCore 0.8.3!
+这不是OpenCore 0.8.3的最新版本!
 
 :::
 
-So this section is for those who don't have native NVRAM, the most common hardware to have incompatible native NVRAM with macOS are X99 and some X299 series chipsets:
+所以本节是为那些没有原生NVRAM的人准备的，与macOS不兼容的原生NVRAM的最常见硬件是X99和一些X299系列芯片组。
 
 * X99
 * X299
 
-For B360, B365, H310, H370, and Z390 users, make sure you have [SSDT-PMC](https://sumingyd.github.io/Getting-Started-With-ACPI/) both under EFI/OC/ACPI and config.plist -> ACPI -> Add. For more info on making and compiling SSDTs, please see [**Getting started with ACPI**](https://sumingyd.github.io/Getting-Started-With-ACPI/)
+对于B360、B365、H310、H370和Z390用户，确保你在EFI/OC/ACPI和config.plist -> ACPI -> Add下都有[SSDT-PMC](https://sumingyd.github.io/Getting-Started-With-ACPI/)。关于制作和编译SSDT的更多信息，请看 [**开始使用ACPI**](https://sumingyd.github.io/Getting-Started-With-ACPI/)
 
-## Cleaning out the Clover gunk
+## 清理Clover的垃圾
 
-So some may not have noticed but Clover may have installed RC scripts into macOS for proper NVRAM emulation. This is an issue as it conflicts with OpenCore's method of emulation.
+有些人可能没有注意到，但Clover可能已经在macOS中安装了RC脚本，以进行适当的NVRAM模拟。这是一个问题，因为它与OpenCore的模拟方法相冲突。
 
-Files to delete:
+要删除的文件。
 
 * `/Volumes/EFI/EFI/CLOVER/drivers64UEFI/EmuVariableUefi-64.efi`
 * `/Volumes/EFI/nvram.plist`
-* `/etc/rc.clover.lib`
+* `/etc/rc.clover.lib'
 * `/etc/rc.boot.d/10.save_and_rotate_boot_log.local`
 * `/etc/rc.boot.d/20.mount_ESP.local`
 * `/etc/rc.boot.d/70.disable_sleep_proxy_client.local.disabled`
-* `/etc/rc.shutdown.d/80.save_nvram_plist.local​`
+* `/etc/rc.shutdown.d/80.save_nvram_plist.local`
 
-If folders are empty then delete them as well:
+如果文件夹是空的，也要删除它们。
 
 * `/etc/rc.boot.d`
-* `/etc/rc.shutdown.d​`
+* `/etc/rc.shutdown.d`
 
-## Verifying if you have working NVRAM
+## 验证你是否有工作的NVRAM
 
-To start, open the terminal and run the following command, which sets a variable named `test` in your NVRAM to the current date and time:
+首先，打开终端，运行以下命令，在NVRAM中设置一个名为`test`的变量为当前日期和时间。
 
 ```sh
 sudo nvram myvar="$(date)"
 ```
 
-Now reboot and run this:
+现在重新启动并运行这个命令。
 
 ```sh
 nvram myvar
 ```
 
-If nothing returns then your NVRAM is not working. If a line containing `myvar` and then the current date, your NVRAM is working.
+如果没有返回，那么你的NVRAM就没有工作。如果有一行包含`myvar`，然后是当前日期，那么你的NVRAM就工作了。
 
-## Emulating NVRAM (with a `nvram.plist`)
+## 模拟NVRAM(使用`nvram.plist`)
 
-If you don't have native NVRAM, don't fret. We can set up emulated NVRAM by using a script to save the NVRAM contents to a plist during the shutdown process, which will then be loaded by OpenCore at the next startup.
+如果你没有本地的NVRAM，不要着急。我们可以通过使用脚本来设置模拟NVRAM，在关机过程中将NVRAM内容保存到plist中，然后在下次启动时由OpenCore加载。
 
-To enable emulated NVRAM, you'll need the following set:
+要启用模拟NVRAM，你需要进行以下设置。
 
-Within your config.plist:
+在你的config.plist中：
 
-* **Booter -> Quirks**:
-  * `DisableVariableWrite`: set to `NO`
+* **Booter -> Quirks**。
+  * `DisableVariableWrite`：设置为`NO`
 * **Misc -> Security**:
-  * `ExposeSensitiveData`: set to at least `0x1`
+  * `ExposeSensitiveData`: 设置为至少`0x1`
 * **NVRAM**:
-  * `LegacyOverwrite` set to `YES`
-  * `LegacySchema`: NVRAM variables set (OpenCore compares these to the variables present in `nvram.plist`)
-  * `WriteFlash`: set to `YES`
+  * `LegacyOverwrite`设置为`YES`
+  * `LegacySchema`: 设置NVRAM变量（OpenCore将这些变量与`nvram.plist`中的变量进行比较）
+  * `WriteFlash`：设置为`YES`
 
-And within your EFI:
+而在你的EFI中：
 
-* `OpenVariableRuntimeDxe.efi` driver
-* `OpenRuntime.efi` driver (this is needed for proper sleep, shutdown and other services to work correctly)
+* `OpenVariableRuntimeDxe.efi`驱动程序
+* `OpenRuntime.efi` 驱动程序 (这对于正确的睡眠、关机和其他服务的正常工作是必需的)
 
-Make sure to snapshot after to make sure the drivers are listed in your config.plist. Afterwards, make sure that both `OpenVariableRuntimeDxe.efi` and `OpenRuntime.efi` have `LoadEarly` set to `YES`, and that `OpenVariableRuntimeDxe.efi` is placed _before_ `OpenRuntime.efi` in your config .
+确保在快照之后，确保这些驱动被列在你的config.plist中。之后，确保`OpenVariableRuntimeDxe.efi`和`OpenRuntime.efi`的`LoadEarly`设置为`YES`，并且`OpenVariableRuntimeDxe.efi`在你的配置中被置于`OpenRuntime.efi`之前。
 
-Now grab the [LogoutHook folder](https://github.com/acidanthera/OpenCorePkg/releases) (inside `Utilities`) and place it somewhere safe (e.g. within your user directory, as shown below):
+现在抓取[LogoutHook文件夹](https://github.com/acidanthera/OpenCorePkg/releases)(在`Utilities`内)并把它放在安全的地方(例如在你的用户目录内，如下所示)
 
 `/Users/$(whoami)/LogoutHook/`
 
-Open up terminal and run the following (one at a time):
+打开终端，运行以下程序（一次一个）。
 
 ```bash
 cd /Users/$(whoami)/LogoutHook/
 ./Launchd.command install 
 ```
 
-And voila! You have emulated NVRAM!
+然后就可以了! 你有了模拟的NVRAM!
