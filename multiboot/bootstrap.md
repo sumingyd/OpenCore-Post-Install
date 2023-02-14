@@ -1,77 +1,77 @@
-# Using LauncherOption
+# 使用启动器选项
 
-* Note: With OpenCore 0.6.6, Bootstrap.efi has been replaced with LauncherOption. See here for more info on updating: [Updating Bootstrap in 0.6.6](#updating-bootstrap-in-0-6-6)
+* 注意:在OpenCore 0.6.6中，Bootstrap.efi已被LauncherOption取代。查看这里关于更新的更多信息:[在0.6.6更新引导](#updating-bootstrap-in-0-6-6)
 
-With OpenCore 0.6.6 and newer, we are now able to launch OpenCore directly from our firmwares without needing a launcher (Bootstrap.efi or BOOTx64.efi) as an intermediary. This allows us to add OpenCore to our motherboard's boot menu and prevent issues where either Windows or Linux try to overwrite the `EFI/BOOT/BOOTx64.efi` path, which can happen when installing or updating Windows and therefore breaking OpenCore's ability to boot.
+使用OpenCore 0.6.6及更新版本，我们现在可以直接从我们的固件启动OpenCore，而不需要启动器(Bootstrap efi或BOOTx64.efi)作为中介。这允许我们将OpenCore添加到主板的启动菜单中，并防止Windows或Linux试图覆盖`EFI/boot/BOOTx64.EFI`路径的问题，这可能在安装或更新Windows时发生，从而破坏OpenCore的启动能力。
 
-## Prerequisites
+## 前提条件
 
 ![](../images/bootstrap-md/config.png)
 
 * [OpenCore 0.6.6 or newer](https://github.com/acidanthera/OpenCorePkg/releases)
-  * For 0.6.5 and older users upgrading, see here: [Updating Bootstrap in 0.6.6](#updating-bootstrap-in-0-6-6)
+  * 对于0.6.5和更老的用户升级，请参见这里:[在0.6.6中更新引导](#updating-bootstrap-in-0-6-6)
 * config.plist settings:
   * `Misc -> Boot -> LauncherOption` = `Full`
-    * Use `Short` for Insyde based firmwares, commonly found on laptops
+    * 使用 `Short` 使用
   * `UEFI -> Quirks -> RequestBootVarRouting` = `True`
 * [OpenShell](https://github.com/acidanthera/OpenCorePkg/releases)
-  * Bundled with OpenCore
-  * Remember to add this to both EFI/OC/Tools and `Misc -> Tools`
-  * This is mainly for troubleshooting
+  * 与OpenCore绑定
+  * 记得将此添加到EFI/OC/Tools和`Misc -> Tools`
+  * 这主要用于故障排除
 
-## Booting
+## 引导
 
-If everything is set up correctly, the first boot will have OpenCore create a new boot option in our BIOS (pointing to `EFI/OC/OpenCore.efi`) and future boots will update the entry making sure it's correct and ensuring it is still present. This now allows us to remove BOOTx64.efi and not worry about other OSes overwriting the `EFI/BOOT/BOOTx64.efi` path.
+如果一切都正确设置，第一个启动将让OpenCore在我们的BIOS中创建一个新的启动选项(指向`EFI/OC/OpenCore.EFI`)，未来的启动将更新条目，以确保它是正确的，并确保它仍然存在。这现在允许我们删除BOOTx64 efi，而不必担心其他操作系统会覆盖`efi/BOOT/BOOTx64.efi`路径。
 
-## Troubleshooting
+## 故障排除
 
-If no new boot option is created, you can follow these troubleshooting steps but first double-check the prerequisites were met. The following sections are a mini-guide in case LauncherOption doesn't work or you'd like to do it manually.
+如果没有创建新的引导选项，可以按照这些故障排除步骤进行，但首先要仔细检查是否满足了前提条件。以下部分是一个迷你指南，以防启动器选项不起作用或你想手动执行。
 
-* [Verify LauncherOption entry was applied](#verify-launcheroption-entry-was-applied)
-* [Removing LauncherOption entry from BIOS](#removing-launcheroption-entry-from-bios)
+* [验证启动程序选项条目是否适用](#verify-launcheroption-entry-was-applied)
+* [从BIOS中删除启动器选项条目](#removing-launcheroption-entry-from-bios)
 
-### Verify LauncherOption entry was applied
+### 验证LauncherOption条目是否适用
 
-For those wanting to verify that the entry was applied in OpenCore, enable logging (see [OpenCore Debugging](https://sumingyd.github.io/OpenCore-Install-Guide/troubleshooting/debug.html)) and check for entries similar to these:
+对于那些想要验证在OpenCore中应用的条目，启用日志记录(参见[OpenCore调试](https://sumingyd.github.io/OpenCore-Install-Guide/troubleshooting/debug.html))并检查类似于这些条目:
 
 ```
 OCB: Have existing option 1, valid 1
 OCB: Boot order has first option as the default option
 ```
 
-### Removing LauncherOption entry from BIOS
+### 从BIOS中删除启动器LauncherOption
 
-Because the LauncherOption entry is a protected entry when resetting NVRAM, you'll need to disable `LauncherOption` first before you can remove it:
+因为启动器选项项在重置NVRAM时是受保护的项，所以你需要先禁用`LauncherOption`，然后才能删除它:
 
 * `Misc -> Security -> AllowNvramReset -> True`
 * `Misc -> Boot -> LauncherOption -> Disabled`
 
-Once these are set, you can reboot into the OpenCore picker and select the `Reset NVRAM` entry to clear your NVRAM, which will remove the LauncherOption entry too..
+一旦这些设置完毕，您可以重新启动进入OpenCore 选择器，并选择`Reset NVRAM`条目以清除您的NVRAM，这将删除启动器选项条目。
 
-## Updating Bootstrap in 0.6.6
+## 在0.6.6中更新Bootstrap
 
-For those updating to 0.6.6, you may have noticed `Bootstrap.efi` has been removed from OpenCore. This is due to changes with how OpenCore works; specifically OpenCore is now a UEFI application instead of a driver. This means `OpenCore.efi` can be loaded directly and a launcher (Bootstrap.efi) is no longer needed.
+对于那些更新到0.6.6的人，您可能已经注意到`Bootstrap.efi`已从OpenCore中删除。这是由于OpenCore工作方式的改变;具体来说，OpenCore现在是一个UEFI应用程序而不是驱动程序。这意味着`OpenCore.efi`可以直接加载，不再需要启动器(Bootstrap.efi)。
 
-### With Bootstrap disabled
+### 禁用Bootstrap
 
-If Bootstrap is disabled prior to updating to 0.6.6, you don't need to make any changes, just the usual file swapping. If afterwards you would like to try `LauncherOption`, you can do so with no issues.
+如果Bootstrap在升级到0.6.6之前就被禁用了，那么你不需要做任何更改，只需要进行通常的文件交换即可。如果之后你想尝试`LauncherOption`，你可以这样做没有问题。
 
-### With Bootstrap enabled
+### 启用Bootstrap
 
-If Bootstrap is enabled prior to updating to 0.6.6, and your motherboard's firmware will autodetect `EFI/BOOT/BOOTx64.efi`, you can do the following before you update:
+如果Bootstrap是在升级到0.6.6之前启用的，并且你的主板固件会自动检测`EFI/BOOT/BOOTx64.EFI`，你可以在更新之前执行以下操作:
 
-1. Set `Misc -> Security -> AllowNvramReset` to `True` and `Misc -> Security -> BootProtect` to `None`, then reset NVRAM (either outside of or in OpenCore) and boot. This will get rid of the old Bootstrap boot entry.
-2. Update your OpenCore setup as normal, ensuring that you copy BOOTx64.efi from the OpenCore package to `EFI/BOOT/BOOTx64.efi` and set `Misc -> Boot -> LauncherOption` in your config.plist to `Full` (or `Short` if previously using `BootstrapShort`).
-3. Reboot.
+1. 设置`Misc -> Security -> AllowNvramReset`为`True`， `Misc -> Security -> BootProtect`为`None`，然后重置NVRAM(在OpenCore外部或内部)并启动。这将删除旧的Bootstrap启动项。
+2. 更新您的OpenCore设置正常，确保您从OpenCore包复制BOOTx64.efi到`efi/BOOT/BOOTx64.efi`，并在config.plist中将`Misc -> BOOT -> LauncherOption`设置为`Full`(或`Short`，如果以前使用`BootstrapShort`)。
+3. 重新启动
 
-   On first boot you will need to boot from `EFI/BOOT/BOOTx64.efi`, but on subsequent boots you should see the LauncherOption entry created by OpenCore directly booting `OpenCore.efi`.
+   在第一次启动时，您需要从`EFI/boot/BOOTx64.EFI`启动，但在后续启动时，您应该看到由OpenCore直接启动`OpenCore.EFI`创建的LauncherOption条目。
 
-If your firmware does not automatically detect `EFI/BOOT/BOOTx64.efi` or you cannot put OpenCore's launcher there for any reason, you have multiple other options:
+如果您的固件不能自动检测`EFI/BOOT/BOOTx64.EFI`，或者您由于任何原因无法将OpenCore的启动器放在那里，您有多种其他选项:
 
-* Put `OpenShell.efi` on a USB, rename and move to `EFI/BOOT/BOOTx64.efi`, and follow the above steps, except instead of selecting `BOOTx64.efi` from the boot menu, boot into the USB and launch OpenCore from there directly.
-* Add a folder `EFI/OC/Bootstrap` and copy and rename BOOTx64.efi from the OpenCore package to `EFI/OC/Bootstrap/Bootstrap.efi`. Then, after updating your OpenCore setup, set `Misc -> Boot -> LauncherOption` to the appropriate option (`Full`, or `Short` if previously using `BootstrapShort`) and boot OpenCore using the existing entry create by Bootstrap. After your first boot, you should see a new OpenCore boot entry added. You can then reset NVRAM in OpenCore (making sure to keep `LauncherOption` enabled so you don't delete the new entry) to get rid of the old Bootstrap boot entry.
+* 将`OpenShell.efi`放在USB上，重命名并移动到`efi/BOOT/BOOTx64.efi`，然后按照上面的步骤操作，只是不要从启动菜单中选择`BOOTx64.efi`，而是引导到USB并从那里直接启动OpenCore。
+* 添加一个文件夹`EFI/OC/Bootstrap`，并从OpenCore包中复制并重命名BOOTx64.EFI到`EFI/OC/Bootstrap/Bootstrap.EFI`。然后，在更新您的OpenCore设置后，将`Misc -> Boot -> LauncherOption`设置为适当的选项(`Full`，或`Short`，如果以前使用`BootstrapShort`)并使用由Bootstrap创建的现有条目引导OpenCore。第一次启动后，您应该看到添加了一个新的OpenCore启动条目。然后你可以在OpenCore中重置NVRAM(确保启用`LauncherOption`，这样你就不会删除新的条目)以删除旧的Bootstrap引导条目。
 
-Conversion notes:
+转换说明:
 
 | 0.5.8 - 0.6.5 | 0.6.6+ |
 | :--- | :--- |
