@@ -1,17 +1,17 @@
-# Patching Bus IDs
+# 补丁总线ID
 
-This section is mainly relevant for those who cannot use certain display outputs regardless of the connector-type or SMBIOS patch, as Apple has hardcoded the output BusIDs in a way that doesn't match your hardware. To resolve, we'll be manually patching these bus IDs into supporting our hardware.
+本节主要与那些无论连接器类型或SMBIOS补丁都无法使用某些显示输出的人有关，因为苹果对输出总线ID进行了硬编码，与你的硬件不匹配。为了解决这个问题，我们将手动修补这些总线ID以支持我们的硬件。
 
-This page will be a bit more technical as we've assumed you've read through the previous pages and have a decent grasp of WhateverGreen.
+这一页会比较技术性，因为我们已经假定你已经读完了前面的几页，并且对WhateverGreen有了一定的了解。
 
-* [Patching the display type](./connector.md)
-* [Patching the VRAM requirement of macOS](./vram.md)
+* [修补显示类型](./connector.md)
+* [对macOS的VRAM要求进行修补](./vram.md)
 
-## Parsing the framebuffer
+## 解析帧缓冲区
 
-To start, let's assume we're using a Z390 board with a UHD 630. This system is iGPU-only in macOS and has issues with using certain display-outs, and is using the `0x3E9B0007` framebuffer.
+首先，让我们假设我们使用的是一块带有UHD 630的Z390主板。这个系统在macOS中只使用iGPU，在使用某些显示输出时有问题，并且使用了`0x3E9B0007`帧缓冲器。
 
-When we look at this framebuffer from [WhateverGreen's manual](https://github.com/acidanthera/WhateverGreen/blob/master/Manual/FAQ.IntelHD.en.md), we see the following:
+当我们从[WhateverGreen的手册](https://github.com/acidanthera/WhateverGreen/blob/master/Manual/FAQ.IntelHD.en.md)上看这个帧缓冲器时，我们看到以下情况：
 
 ```
 ID: 3E9B0007, STOLEN: 57 MB, FBMEM: 0 bytes, VRAM: 1536 MB, Flags: 0x00801302
@@ -28,7 +28,7 @@ Mobile: 0, PipeCount: 3, PortCount: 3, FBMemoryCount: 3
 03060800 00040000 C7030000
 ```
 
-Now let's parse it down to the BusID information, as this is what we will be patching:
+现在让我们把它解析为BusID信息，因为这就是我们要修补的内容：
 
 ```
 [1] busId: 0x05, pipe: 9, type: 0x00000400, flags: 0x000003C7 - DP
@@ -39,7 +39,7 @@ Now let's parse it down to the BusID information, as this is what we will be pat
 03060800 00040000 C7030000
 ```
 
-Here we see that this framebuffer personality has 3 Bus IDs listed, let's try to break them down to be a bit more understandable. Let's take entry 1:
+在这里，我们看到这个帧缓冲器的特性中列出了3个总线ID，让我们试着把它们分解，以便更容易理解。让我们来看看第1条：
 
 ```
 [1] busId: 0x05, pipe: 9, type: 0x00000400, flags: 0x000003C7 - DP
@@ -54,25 +54,25 @@ Here we see that this framebuffer personality has 3 Bus IDs listed, let's try to
 | Bit 5-8 | Connector Type | `00040000` |
 | Bit 9-12 | Flags | `C7030000` |
 
-Things to keep in mind:
+需要记住的事情。
 
-* BusID is a unique value and cannot be used by multiple entries
-* Connector-type values are the same as discussed in the [Connector-type patching page](./connector.md)
+* BusID是一个唯一的值，不能被多个条目使用
+* 连接器类型的值与[连接器类型修补页](./connector.md)中讨论的相同。
 
-## Mapping the video ports
+## 映射视频端口
 
-Here we have 2 sections:
+这里我们有两个部分。
 
-* [Mapping within macOS](#mapping-withinb-macos)
-  * You can boot macOS and use at least 1 display
-* [Mapping without macOS](#mapping-without-macos)
-  * Blackscreen on all displays
+* [macOS内的映射](#mapping-withinb-macos)
+  * 你可以启动macOS并使用至少一个显示器。
+* [不使用macOS的映射](#mapping-without-macos)
+  * 在所有显示器上黑屏
   
-### Mapping within macOS
+### 在macOS中的映射
 
-Mapping videos in macOS is fairly easy, as we can assume that one of our ports is mapped correctly in the framebuffer.
+在macOS中映射视频是相当容易的，因为我们可以假设我们的一个端口在帧缓冲器中被正确映射。
 
-For this example, we'll explain the common [HDMI-hotplug fix for Kaby lake users](https://sumingyd.github.io/OpenCore-Install-Guide/config-laptop.plist/kaby-lake.html#deviceproperties). To start, lets look at the `0x591B0000` framebuffer:
+在这个例子中，我们将解释常见的[HDMI-hotplug fix for Kaby lake users](https://sumingyd.github.io/OpenCore-Install-Guide/config-laptop.plist/kaby-lake.html#deviceproperties)。首先，让我们看一下`0x591B0000`帧缓冲区：
 
 ```
 ID: 591B0000, STOLEN: 38 MB, FBMEM: 21 MB, VRAM: 1536 MB, Flags: 0x0000130B
@@ -88,32 +88,32 @@ Mobile: 1, PipeCount: 3, PortCount: 3, FBMemoryCount: 3
 03060A00 00040000 87010000
 ```
 
-Here we see that entry 2 is the HDMI port however on a real Kaby lake laptop it's very common for hot plug to kernel panic the machine. This is due to the bus ID and port not aligning perfectly with the hardware.
+在这里，我们看到第2条是HDMI端口，但是在真正的Kaby lake笔记本电脑上，热插拔导致机器内核崩溃的情况非常普遍。这是由于总线ID和端口与硬件不完全一致造成的。
 
-To resolve, we'll want to patch it to something more appropriate(ie. `0204` to `0105`, these have been tested to work properly)
+为了解决这个问题，我们要把它打成更合适的东西（即把`0204`改为 `0105`，这些都是经过测试可以正常工作的）。
 
-There are 2 ways to patch:
+有2种方法来修补。
 
-* [Replace the entire entry](#replace-the-entire-entry)
-* [Replace sections of the entry](#replace-sectons-of-the-entry)
+* [替换整个条目](#replace-the-entire-entry)
+* [替换条目的部分内容](#replace-sectons-of-the-entry)
 
-#### Replace the entire entry
+#### 替换整个条目
 
-To replace the entire entry, we'll first want to locate our entry and ensure it's enumerated correctly. This is because Apple's has entries starting at 0 and progresses through that:
+要替换整个条目，我们首先要找到我们的条目，并确保它被正确枚举。这是因为Apple的条目从0开始，并依次递增。
 
 * con0
 * con1
 * con2
 
-So since entry 2 is the second in the list, we'll want to use con1:
+因此，由于条目2是列表中的第二个，我们要使用con1。
 
 * framebuffer-con2-enable
 
-Next lets make the patch, we know that port needs to be patched to `01` and BusID changed to `05`:
+接下来让我们打补丁，我们知道端口需要打成`01`，BusID改成`05`:
 
 * <code>**0105**0A00 00080000 87010000</code>
 
-And finally, we're given the following patches:
+最后，我们得到了以下补丁。
 
 ```
 framebuffer-patch-enable | Data | `01000000`
@@ -121,24 +121,24 @@ framebuffer-con2-enable  | Data | `01000000`
 framebuffer-con2-alldata | Data | `01050A00 00080000 87010000`
 ```
 
-#### Replace sections of the entry
+#### 替换条目的各个部分
 
-To replace sections of the entry, we'll first want to locate our entry and ensure it's enumerated correctly. This is because Apple's has entries starting at 0 and progresses through that:
+要替换条目的某些部分，我们首先要找到我们的条目，并确保它被正确列举出来。这是因为苹果公司的条目从0开始，然后依次递增。
 
 * `con0`
 * `con1`
 * `con2`
 
-So since entry 2 is the second in the list, we'll want to use con1:
+因此，由于条目2是列表中的第二个，我们要使用con1。
 
-* `framebuffer-con1-enable`
+* `framebuffer-con1-enable`。
 
-Next lets make the patch, we know that port needs to be patched to 01 and BusID changed to 05:
+接下来让我们打补丁，我们知道端口需要打成01，BusID改成05。
 
 * framebuffer-con2-index = `01`
 * framebuffer-con2-busid = `05`
 
-And finally, we get these patches:
+最后，我们得到了这些补丁:
 
 ```
 framebuffer-patch-enable | Data | `01000000`
@@ -147,11 +147,11 @@ framebuffer-con2-index   | Data | `01`
 framebuffer-con2-busid   | Data | `05`
 ```
 
-### Mapping without macOS
+### 没有macOS的映射
 
-Mapping your display outs is fairly simple, *however* is quite time consuming as you need to try every BusID value until you get an output.
+映射你的显示器输出是相当简单的，*然而*是相当耗时的，因为你需要尝试每一个BusID值，直到你得到一个输出。
 
-For this example, we'll use the 0x3E9B0007 framebuffer again.
+在这个例子中，我们将再次使用0x3E9B0007帧缓冲器。
 
 ```
 [1] busId: 0x05, pipe: 9, type: 0x00000400, flags: 0x000003C7 - DP
@@ -162,54 +162,54 @@ For this example, we'll use the 0x3E9B0007 framebuffer again.
 03060800 00040000 C7030000
 ```
 
-To start, we'll be trying to go through entry 1's BusIDs in hope we find working value.
+首先，我们将试图通过条目1的BusIDs，希望能找到工作值。
 
-##### 1. Here plug in your HDMI display
+##### 1. 在这里插上你的HDMI显示器
 
-##### 2. Set Port 1 to the HDMI connector type
+##### 2. 将端口1设置为HDMI连接器类型
 
 * <code>01xx0900 **00080000** C7030000</code>
 
-::: details Supported Connector Types
+::: details 支持的连接器类型
 
-Common connector types supported in macOS
+macOS中支持的常见连接器类型
 
 ```
-<02 00 00 00>        LVDS and eDP      - Laptop displays
-<10 00 00 00>        VGA               - Unsupported in 10.8 and newer
-<00 04 00 00>        DisplayPort       - USB-C display-out are DP internally
-<01 00 00 00>        DUMMY             - Used when there is no physical port
+<02 00 00 00>        LVDS 和 eDP      - 笔记本显示器
+<10 00 00 00>        VGA               - 在10.8和更新的版本中不被支持
+<00 04 00 00>        DisplayPort       - USB-C显示输出内部为DP
+<01 00 00 00>        DUMMY             - 在没有物理端口时使用
 <00 08 00 00>        HDMI
 <80 00 00 00>        S-Video
-<04 00 00 00>        DVI (Dual Link)
-<00 02 00 00>        DVI (Single Link)
+<04 00 00 00>        DVI (双链路)
+<00 02 00 00>        DVI (单链路)
 ```
 
-Reminder that VGA on Skylake and newer are actually DisplayPort internally, so use that connector type instead.
+提醒大家，Skylake和更新版本的VGA在内部实际上是DisplayPort，所以用这种连接器类型代替。
 
 :::
 
-##### 3. Disable ports 2 and 3 with busid=00
+##### 3. 用busid=00禁用端口2和3
 
 * <code>02**00**0A00 00040000 C7030000</code>
 * <code>03**00**0800 00040000 C7030000</code>
 
-##### 4. Walk through busids for Port 1 if the previous didn't work. The maximum busid on most platforms generally 0x06
+##### 4. 如果前面的方法不奏效，就走一遍端口1的busids。在大多数平台上，最大的busid一般是0x06
 
 * <code>01**01**0900 00080000 C7030000</code>
 * <code>01**02**0900 00080000 C7030000</code>
 * <code>01**03**0900 00080000 C7030000</code>
-* etc
+* 等
 
-If you still get no output, set port 1's busid to 00 and start going through busids for port 2 and so on
+如果还是没有输出，把端口1的母线设置为00，然后开始查看端口2的母线，依次类推。
 
 * port 1 = <code>01000900 00040000 C7030000</code>
 * port 2 = <code>02**xx**0A00 00080000 C7030000</code>
 * port 3 = <code>03000800 00040000 C7030000</code>
 
-#### Adding to your config.plist
+#### 添加到你的config.plist中
 
-You'll now want to add the following patches to `DeviceProperteies -> Add -> PciRoot(0x0)/Pci(0x2,0x0)`:
+你现在要在 `DeviceProperteies -> Add -> PciRoot(0x0)/Pci(0x2,0x0)`中添加以下补丁:
 
 ```
 framebuffer-patch-enable | Data | `01000000`
@@ -221,14 +221,14 @@ framebuffer-con1-alldata | Data | port 2 (ie. `02000A00 00040000 C7030000`)
 framebuffer-con2-alldata | Data | port 3 (ie. `03000800 00040000 C7030000`)
 ```
 
-Note that:
+请注意:
 
-* port 1 would be labeled as `con0`
-* port 1's BusID is set to `01`
-* port 2 and 3's BusID are set to `00`, disabling them
+* 端口1将被标记为`con0`
+* 端口1的BusID被设置为`01'
+* 端口2和3的BusID被设置为`00'，禁用它们
 
-When done, you should get something similar:
+完成后，你应该得到类似的东西:
 
 ![](../../images/gpu-patching/path-done.png)
 
-And as mentioned before, if this combo doesn't work, increment port 1's BusID and if that doesn't work disable port 1's busID and try port 2 and so forth.
+如前所述，如果这个组合不起作用，就增加端口1的BusID，如果还不起作用，就禁用端口1的BusID，然后尝试端口2，以此类推。
