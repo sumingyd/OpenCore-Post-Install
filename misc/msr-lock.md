@@ -1,121 +1,121 @@
-# Fixing CFG Lock
+# 修复CFG锁
 
-This guide is only recommended for users who have already installed macOS, for users who are installing for the first time enable `AppleCpuPmCfgLock` and `AppleXcpmCfgLock` under `Kernel -> Quirks`
+本指南只推荐给已经安装了macOS的用户，对于第一次安装的用户，请在`Kernel -> Quirks`中启用`AppleCpuPmCfgLock` 和 `AppleXcpmCfgLock` 。
 
-* Note that this guide is only applicable for Intel users. AMD users don't have any type of CFG Lock
+* 注意，本指南只适用于英特尔用户。AMD用户没有任何类型的CFG锁。
 
-## What is CFG-Lock
+## 什么是CFG-锁
 
-CFG-Lock is a setting in your BIOS that allows for a specific register(in this case the MSR 0xE2) to be written to. By default, most motherboards lock this variable with many even hiding the option outright in the GUI. And why we care about it is that macOS actually wants to write to this variable, and not just one part of macOS. Instead both the Kernel (XNU) and AppleIntelPowerManagement want this register.
+CFG-Lock 是 BIOS 中的一个设置，它允许写入一个特定的寄存器（在这里是 MSR 0xE2）。默认情况下，大多数主板都会锁定这个变量，许多主板甚至在GUI中直接隐藏了这个选项。我们关心的原因是macOS实际上想写这个变量，而不仅仅是macOS的一个部分。相反，内核（XNU）和AppleIntelPowerManagement都想要这个寄存器。
 
-So to fix it we have 2 options:
+所以要解决这个问题，我们有两个选择。
 
-#### 1. Patch macOS to work with our hardware
+#### 1. 给macOS打补丁，使其与我们的硬件一起工作
 
-* This creates instability and unnecessary patching for many
-* The 2 patches we use for this:
-  * `AppleCpuPmCfgLock` for AppleIntelPowerManagement.kext
-  * `AppleXcpmCfgLock` for the Kernel(XNU)
+* 这对许多人来说会造成不稳定和不必要的修补。
+* 我们为此使用的2个补丁。
+  * `AppleCpuPmCfgLock`用于AppleIntelPowerManagement.kext
+  * `AppleXcpmCfgLock`用于内核(XNU)
 
-#### 2. Patch our firmware to support MSR E2 write
+#### 2. 给我们的固件打补丁，以支持MSR E2的编写
 
-* Very much preferred, as avoids patching allowing for greater flexibility regarding stability and OS upgrades
+* 非常喜欢，因为可以避免打补丁，在稳定性和操作系统升级方面有更大的灵活性。
   
-Note: Penyrn based machines actually don't need to worry about unlocking this register
+注意：基于Penyrn的机器实际上不需要担心解锁这个寄存器。
 
-## Checking if your firmware supports CFG Lock unlocking
+## 检查你的固件是否支持CFG锁的解锁
 
-Before proceeding with the rest of this guide, you'll first need to check if your firmware supports CFG Lock unlocking.
-To check it, you can proceed into two ways:
+在进行本指南的其余部分之前，你首先需要检查你的固件是否支持CFG锁的解锁。
+要检查它，你可以通过两种方式进行。
 
-1. [Use the DEBUG version of OpenCore and check what the log says about CFG Lock](#checking-via-opencore-logs)
-2. [Use a tool called `ControlMsrE2` which will speed up the whole checking process](#checking-via-ControlMsrE2)
+1. [使用OpenCore的DEBUG版本，检查日志中关于CFG锁的内容](#checking-via-opencore-logs)
+2. [使用一个叫做`ControlMsrE2`的工具，它将加快整个检查过程](#checking-via-ControlMsrE2)
 
-### Checking via OpenCore logs
+### 通过OpenCore日志进行检查
 
-For users who prefer using DEBUG release, you'll want to enable the DEBUG variant of OpenCore with `Target` set to `67` and boot OpenCore. This should provide you with a file in the format of `opencore-YYYY-MM-DD-hhmmss.txt` on the root of the drive.
+对于喜欢使用DEBUG版本的用户，你要启用OpenCore的DEBUG变体，将`Target`设置为`67`，然后启动OpenCore。这将为您提供一个格式为`opencore-YYY-MM-DD-hhmmss.txt`的文件，位于驱动器的根目录下。
 
-Within this file, search for `OCCPU: EIST CFG Lock`:
+在这个文件中，搜索 `OCCPU: EIST CFG Lock`:
 
 ```
 OCCPU: EIST CFG Lock 1
 ```
 
-If it returns `1`, then you proceed with this guide here: [Disabling CFG Lock](#disabling-cfg-lock).
+如果它返回`1`，那么你就按这里的指南进行。[禁用CFG锁](#disabling-cfg-lock)。
 
-Otherwise(ie. `0`), no reason to continue and you can simply disable `Kernel -> Quirks -> AppleCpuPmCfgLock` and `Kernel -> Quirks -> AppleXcpmCfgLock`.
+否则（即`0`），没有理由继续，你可以简单地禁用 `Kernel -> Quirks -> AppleCpuPmCfgLock` 和 `Kernel -> Quirks -> AppleXcpmCfgLock`.
 
-### Checking via ControlMsrE2
+### 通过ControlMsrE2进行检查
 
-To start, download [ControlMsrE2](https://github.com/acidanthera/OpenCorePkg/releases) and add this tool inside `EFI/OC/Tools` and `config.plist`(this can be done with ProperTree's snapshot function(ie. Cmd+R)). Next, boot OpenCore and select the `ControlMsrE2.efi` entry. This should provide you one of the following:
+首先，下载[ControlMsrE2](https://github.com/acidanthera/OpenCorePkg/releases)，并将该工具添加到`EFI/OC/Tools`和`config.plist`中（这可以通过ProperTree的快照功能（即Cmd+R）完成）。接下来，启动OpenCore并选择`ControlMsrE2.efi`条目。这应该为您提供以下信息之一。
 
-* CFG-Lock is enabled:
+* CFG-锁已经启用。
 
 ```
 This firmware has LOCKED MSR 0xE2 register!
 ```
 
-* CFG-Lock is disabled:
+* CFG-锁被禁用。
 
 ```
 This firmware has UNLOCKED MSR 0xE2 register!
 ```
 
-For the former, please continue here: [Disabling CFG Lock](#disabling-cfg-lock).  
+对于前者，请在这里继续。[禁用CFG锁](#disabling-cfg-lock)。
 
-For the latter, you don't need to do any CFG-Lock patches and can simply disable `Kernel -> Quirks -> AppleCpuPmCfgLock` and `Kernel -> Quirks -> AppleXcpmCfgLock`.
+对于后者，你不需要做任何CFG-Lock补丁，可以简单地禁用 `Kernel -> Quirks -> AppleCpuPmCfgLock`和`Kernel -> Quirks -> AppleXcpmCfgLock`。
 
-## Disabling CFG Lock
+## 禁用CFG锁
 
-So you've created the EFI folder but you can't still boot without unlocking before CFG Lock. In order to do this you'll need the following:
+所以，你已经创建了EFI文件夹，但在CFG锁之前，你仍然无法启动，因为没有解锁。为了做到这一点，你将需要以下内容。
 
-Inside your `EFI/OC/Tools` folder and `config.plist`, add the following tool(this can be done with ProperTree's snapshot function(ie. Cmd+R)):
+在你的`EFI/OC/Tools`文件夹和`config.plist`中，添加以下工具（这可以用ProperTree的快照功能（即Cmd+R）来完成）。
 
-* [Modified GRUB Shell](https://github.com/datasone/grub-mod-setup_var/releases)
+* [修改过的GRUB Shell](https://github.com/datasone/grub-mod-setup_var/releases)
 
-And some apps to help us out:
+还有一些应用程序来帮助我们。
 
-* [UEFITool](https://github.com/LongSoft/UEFITool/releases) (Make sure it's UEFITool and not UEFIExtract)
+* [UEFITool](https://github.com/LongSoft/UEFITool/releases) (请确保是UEFITool而不是UEFIExtract)
 * [Universal-IFR-Extractor](https://github.com/LongSoft/Universal-IFR-Extractor/releases)
 
-And the final part, grabbing your BIOS from the vendors' website.
+最后一个部分，从供应商的网站上抓取你的BIOS。
 
-Now the fun part!
+现在是有趣的部分!
 
-## Turning off CFG-Lock manually
+## 手动关闭CFG-Lock
 
-**Please note that the only firmwares that can be directly opened by UEFITool are ASUS, MSI and ASRock. Other firmwares need a special procedure which we'll not directly cover into this guide. For Dell firmwares, please refer to [dreamwhite's guide](https://github.com/dreamwhite/bios-extraction-guide/tree/master/Dell)**
+**请注意，只有华硕、微星和华擎的固件可以通过UEFITool直接打开。其他固件需要一个特殊的程序，我们将不直接在本指南中介绍。对于戴尔的固件，请参考[dreamwhite的指南](https://github.com/dreamwhite/bios-extraction-guide/tree/master/Dell)**。
 
-1. Open your firmware with UEFITool and then find `CFG Lock` as a Unicode string. If nothing pops up then your firmware doesn't support `CFG Lock`, otherwise continue on.
+1. 用UEFITool打开你的固件，然后找到`CFG Lock`这个Unicode字符串。如果没有弹出，那么你的固件不支持 `CFG Lock`，否则继续下去。
 
-![](../images/extras/msr-lock-md/uefi-tool.png)
+![](./images/extras/msr-lock-md/uefi-tool.png)
 
-1. You'll find that this string is found within a Setup folder, right-click and export as `Setup.bin` (or even `Setup.sct`)
-2. Open your setup file with `ifrextract` and export as a .txt file with terminal:
+1. 你会发现这个字符串是在Setup文件夹中找到的，右击并导出为`Setup.bin`（甚至是`Setup.sct`）。
+2. 用`ifrextract`打开你的设置文件，用终端导出为.txt文件。
 
    ```
    path/to/ifrextract path/to/Setup.bin path/to/Setup.txt
    ```
 
-3. Open the text file and search for `CFG Lock, VarStoreInfo (VarOffset/VarName):` and note the offset right after it (ie: `0x43`) and the VarStore ID right after the offset (ie: `0x3`)
-![](../images/extras/msr-lock-md/MSR-Find.png)
+3. 打开文本文件，搜索`CFG Lock, VarStoreInfo (VarOffset/VarName):`并注意它后面的偏移量（如：`0x43`）和偏移量后面的VarStore ID（如：`0x3`）。
+![](./images/extras/msr-lock-md/MSR-Find.png)
 
-4. Search for `VarStoreId: 0x3` where `0x3` is replaced with the value of the VarStoreId you found and note the `Name` after it (ie: `CpuSetup`)
+4. 搜索`VarStoreId: 0x3`，其中`0x3`被替换为你找到的VarStoreId的值，并注意它后面的`名称`(即：`CpuSetup`)
 
-![](../images/extras/msr-lock-md/VarStoreID-Find.png)
+![](./images/extras/msr-lock-md/VarStoreID-Find.png)
 
-1. Run the Modified GRUB Shell and write the following command where `CpuSetup` is replaced with the VarStore Name you've previously extracted and `0x43` is replaced with the offset you've previously extracted:
+1. 运行修改后的GRUB Shell并编写以下命令，其中`CpuSetup`被替换为你之前提取的VarStore Name，`0x43`被替换为你之前提取的offset。
 
    ```
    setup_var_cv CpuSetup 0x43 0x01 0x00
    ```
 
-At this point, run either `reboot` in the shell or simply reboot your machine. And with that, you should have `CFG Lock` unlocked! To verify, you can run over the methods listed at [Checking if your firmware supports CFG Lock unlocking](#checking-if-your-firmware-supports-cfg-lock-unlocking) to verify whether the variable was set correctly then finally disable `Kernel -> Quirks -> AppleCpuPmCfgLock` and `Kernel -> Quirks -> AppleXcpmCfgLock`.
+在这一点上，在shell中运行`reboot`，或者直接重启你的机器。这样一来，你应该已经解开了 `CFG锁`! 为了验证，你可以运行[Checking if your firmware supports CFG Lock unlocking](#checking-if-your-firmware-supports-cfg-lock-unlocking)中列出的方法来验证变量是否被正确设置，然后最后禁用`Kernel -> Quirks -> AppleCpuPmCfgLock`和`Kernel -> Quirks -> AppleXcpmCfgLock`。
 
-* Do note that variable offsets are unique not just to each motherboard but even to its firmware version. **Never try to use an offset without checking.**
+* 请注意，变量偏移量不仅对每块主板是唯一的，甚至对其固件版本也是唯一的。**在没有检查的情况下，千万不要尝试使用偏移量。**
 
-And you're done! Now you'll have correct CPU power management
+然后你就完成了! 现在你将拥有正确的CPU电源管理
 
-* **Note**: Every time you reset your BIOS you will need to flip this bit again, make sure to write it down with the BIOS version so you know which.
+**注意**。每次你重新设置你的BIOS时，你都需要再次翻转这个位，确保把它和BIOS的版本一起写下来，以便你知道是哪一个。
 
-* **Note 2**: Some OEMs like Lenovo may have the variable set but cannot unlock it without physically modding the BIOS, for these situations you may need to use a tool like [RU](http://ruexe.blogspot.com/): [CFG LOCK/Unlocking - Alternative method](https://www.reddit.com/r/hackintosh/comments/hz2rtm/cfg_lockunlocking_alternative_method/)
+**注2**。一些 OEM（如联想）可能设置了这个变量，但如果不对 BIOS 进行物理修改就无法解锁，对于这些情况，你可能需要使用 [RU](http://ruexe.blogspot.com/) 这样的工具。[CFG LOCK/Unlocking - Alternative method](https://www.reddit.com/r/hackintosh/comments/hz2rtm/cfg_lockunlocking_alternative_method/)
