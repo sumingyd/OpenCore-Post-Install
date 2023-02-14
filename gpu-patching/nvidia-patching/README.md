@@ -1,57 +1,57 @@
-# Legacy Nvidia Patching
+# 传统的Nvidia补丁
 
-* Please note this page is more of an info dump, we won't be going to too great of detail on setup though we plan to expand this page more for it.
+* 请注意，这个页面更像是一个信息转储，我们不会对设置进行太详细的介绍，尽管我们计划为它扩展这个页面。
 
-With legacy Nvidia GPUs, macOS has difficulties enabling acceleration due to many missing properties. To work around this, we can inject properties into IOService for macOS to easily interpret.
+对于传统的Nvidia GPU，由于许多属性的缺失，macOS很难启用加速功能。为了解决这个问题，我们可以在IOS服务中注入属性，以便于macOS轻松解释。
 
-To start off, we'll be assuming the following:
+首先，我们将假设以下情况。
 
-* macOS has already been installed in some way
-  * We need macOS installed to determine certain properties
-* Your GPU is either Fermi or older
-  * Kepler and newer **do not** need Device Property injection
-* Lilu and WhateverGreen are loaded
-  * verify by running `kextstat | grep -E "Lilu|WhateverGreen"`
+* macOS已经以某种方式被安装了
+  * 我们需要安装macOS来确定某些属性
+* 你的GPU是Fermi或更早的版本
+  * 开普勒和更新的**不需要**设备属性注入
+* Lilu和WhateverGreen已经加载
+  * 通过运行`kextstat | grep -E "Lilu|WhateverGreen"`来验证。
   
-### Finding the GPU pathing
+### 找到GPU的路径
 
-First lets grab [gfxutil](https://github.com/acidanthera/gfxutil/releases) and run the following:
+首先让我们获取[gfxutil](https://github.com/acidanthera/gfxutil/releases)并运行以下程序：
 
 ```
 path/to/gfxutil -f display
 ```
 
-This should spit out something like the following:
+这应该会输出类似以下的东西：
 
 ```
 67:00.0 10DE:0A20 /PC02@0/BR2A@0/GFX0@0/ = PciRoot(0x2)/Pci(0x0,0x0)/Pci(0x0,0x0)
 ```
 
-What we care about is the PciRoot section, as this is where our GPU is located and where we'll be injecting our properties:
+我们关心的是PciRoot部分，因为这是我们的GPU所在的位置，也是我们将注入属性的地方：
 
 ```
 PciRoot(0x2)/Pci(0x0,0x0)/Pci(0x0,0x0)
 ```
 
-### Building our DeviceProperties
+### 建立我们的设备属性 DeviceProperties
 
-With Nvidia GPUs, there's actually not too many properties required for setup. The main ones that are recommended are the following:
+对于Nvidia GPU，实际上没有太多的属性需要进行设置。推荐的主要属性有以下几项：
 
 | Property | Value | Comment |
 | :--- | :--- | :--- |
-| model | ex. GeForce GT 220 | GPU model name, cosmetic |
-| device_type | NVDA,Parent | Always set as `NVDA,Parent` |
-| VRAM,totalsize | ex. 0000004000000000 | Sets VRAM size |
-| rom-revision | Dortania | Property must exist, however the value can be anything |
-| NVCAP | ex. 0500000000000F00000000000000000F00000000 | sets display properties used by macOS, more info below |
-| @0,compatible | NVDA,NVMac | Always set as `NVDA,NVMac` |
-| @0,device_type | display | Always set as `display` |
-| @0,name | NVDA,Display-A | Always set as `NVDA,Display-A` |
-| @1,compatible | NVDA,NVMac | Always set as `NVDA,NVMac` |
-| @1,device_type | display | Always set as `display` |
-| @1,name | NVDA,Display-B | Always set as `NVDA,Display-B` |
+| model | ex. GeForce GT 220 | GPU型号名称，美化 |
+| device_type | NVDA,Parent | 始终设置为`NVDA,Parent` |
+| VRAM,totalsize | ex. 0000004000000000 | 设置VRAM大小 |
+| rom-revision | Dortania | 属性必须存在，但其值可以是任何东西 |
+| NVCAP | ex. 0500000000000F00000000000000000F00000000 | 设置macOS使用的显示属性，更多信息见下文 |
+| @0,compatible | NVDA,NVMac | 始终设置为 `NVDA,NVMac` |
+| @0,device_type | display | 始终设置为 `display` |
+| @0,name | NVDA,Display-A | 始终设置为 `NVDA,Display-A` |
+| @1,compatible | NVDA,NVMac | 始终设置为 `NVDA,NVMac` |
+| @1,device_type | display | 始终设置为 `display` |
+| @1,name | NVDA,Display-B | 始终设置为 `NVDA,Display-B` |
 
-And to calculate the properties few properties:
+并计算出属性的几个属性:
 
 * [model](#model)
 * [VRAM,totalsize](#vram-totalsize)
@@ -60,43 +60,43 @@ And to calculate the properties few properties:
 
 ### model
 
-Technically cosmetic, however macOS expects this entry so we'll provide it. The format is as follows:
+从技术上讲是美化，但是macOS期望有这个条目，所以我们要提供它。其格式如下：
 
 ```md
-GeForce [Device Name]
-# Example
+GeForce [设备名称]
+# 示例
 GeForce GT 220
 ```
 
 ### VRAM,totalsize
 
-Amount of VRAM present on your card, in hexadecimal.
+你的卡上存在的VRAM数量，以十六进制表示。
 
-For this example, lets convert 1024MB to hexadecimal:
+在这个例子中，让我们把1024MB转换成16进制：
 
 ```md
-# Convert 1024MB Megabytes to Bytes
+# 将1024MB兆字节转换成字节数
 echo '1024 * 1024 * 1024' | bc
  1073741824
 
-# Convert from decimal to hexadecimal
+# 从十进制转换为十六进制
 echo 'obase=16; ibase=10; 1073741824' | bc
  40000000
 
-# Hexswap so it can be injected correctly
-# ie. swap in pairs
+# 十六进制交换，以便能够正确注入
+# 即成对地交换
 40000000 -> 40 00 00 00 -> 00 00 00 40
 
-# Pad the value to 8 bytes with 00 at the end
+# 将值填充到8个字节，最后是00
 00 00 00 40 00 00 00 00
 
-# And you're done
+# 然后你就完成了
 VRAM,totalsize = 0000004000000000
 ```
 
 ### rom-revision
 
-Simply can be any value, however the property must exist as some GPUs fail to initialize without it(ex. GT 220's)
+可以是任何值，但该属性必须存在，因为有些GPU在没有它的情况下无法初始化（例如GT 220）
 
 ```
 rom-revision = Dortania
@@ -104,69 +104,69 @@ rom-revision = Dortania
 
 ### NVCAP
 
-This is where the fun comes it, as we'll now need to calculate the NVCAP value. Thankfully for us, 1Revenger1 has created a tool to automate the process: [NVCAP Calculator](https://github.com/1Revenger1/NVCAP-Calculator/releases)
+这就是乐趣所在，因为我们现在需要计算NVCAP值。值得庆幸的是，1Revenger1已经创建了一个工具来自动完成这个过程。[NVCAP计算器](https://github.com/1Revenger1/NVCAP-Calculator/releases)
 
-To use this program, simply grab your VBIOS([TechPowerUp hosts most VBIOS](https://www.techpowerup.com/vgabios/)) and run NVCAP-Calculator within your terminal.
+要使用这个程序，只需获取你的VBIOS（[TechPowerUp主持大多数VBIOS](https://www.techpowerup.com/vgabios/)）并在你的终端运行NVCAP-Calculator。
 
-Once its running, you should see the following:
+一旦它运行，你应该看到以下内容
 
 ![](../../images/gpu-patching/nvidia/nvcap-start.jpg)
 
-Give it your VBIOS and then press enter. Once it takes you to the main menu, select option 2 to take you to the NVCAP calculation page.
+给它你的VBIOS，然后按回车。一旦它带你到主菜单，选择选项2，带你到NVCAP计算页面。
 
 ![](../../images/gpu-patching/nvidia/nvcap-initial-nvcap.jpg)
 
-Here you can see the connectors that NVCAP-Calculator was able to find. Each Display may represent multiple DCB Entries, such as DVI (normally represented as two entries) or duplicate DCB entries. The goal here is to assign each display to a head. Each head can only output to one display at a time. For example, if your using 2 DVI ports, each should be on their own head to have proper dual monitor support.
+这里你可以看到NVCAP-Calculator能够找到的连接器。每个显示器可能代表多个DCB条目，如DVI（通常表示为两个条目）或重复的DCB条目。这里的目标是将每个显示器分配给一个头。每个头一次只能输出到一个显示器。例如，如果你使用2个DVI端口，每个端口应该在自己的头上，以获得适当的双显示器支持。
 
-Note that some displays may be assigned automatically. An LVDS display will be put on it's own head automatically, and TV displays will be put on the TV head automatically.
+请注意，一些显示器可能被自动分配。一个LVDS显示器将被自动放在它自己的头上，而电视显示器将被自动放在电视头上。
 
-To start assigning displays, press `1`. To assign a display to a head, you type the number of the display then the number of the head. For example, typing in `1 1` results in:
+要开始分配显示器，按`1`。要把一个显示器分配给一个头，你要输入显示器的号码，然后是头的号码。例如，输入`1 1`的结果是：
 
 ![](../../images/gpu-patching/nvidia/nvcap-assign-entry.jpg)
 
-You can type in `1 1` again to remove the display from the head. Once you are done assigning displays, it should look something like this:
+你可以再次输入`1 1`来从头部移除显示器。一旦你完成了对显示器的分配，它应该看起来像这样。
 
 ![](../../images/gpu-patching/nvidia/nvcap-complete-displays.jpg)
 
-Once you are done setting up the displays, press `q` to return to the other NVCAP settings. You should set the rest of the NVCAP settings as follows:
+一旦你完成了显示器的设置，按`q`返回到其他NVCAP设置。你应该按照以下方式设置其余的NVCAP设置：
 
 | NVCAP Value | Details | Example Command |
 | :---------: | :------ | :-------------- |
-| Version | `04` for 7 series and older, `05` for 8 series and newer | `3` then `4` |
-| Composite | `01` for S-Video, `00` otherwise | `4` to toggle |
-| Script based Power/Backlight | `00` ony useful for genuine MacBook Pros | `3` to toggle |
-| Field F (Unknown) | `0F` for 300 series and newer, otherwise `07` | `6` then `0x0f` |
+| Version |  `04`适用于7系列及以前的产品，`05`适用于8系列及以后的产品 | `3` 然后 `4` |
+| Composite | `01`代表S-视频，否则为`00` | `4` 来切换 |
+| Script based Power/Backlight | `00`只适用于真正的MacBook Pros | `3` 来切换 |
+| Field F (Unknown) | `0F`适用于300系列和更新的产品，否则`07` | `6` 然后 `0x0f` |
 
-Once done, enter in `c` to calculate the NVCAP value
+一旦完成，输入`c`来计算NVCAP值
 
 ![](../../images/gpu-patching/nvidia/nvcap-calculated.jpg)
 
-You now have your NVCAP value!
+现在有了你的NVCAP值!
 
 ```
 NVCAP: 
 05000000 00000300 0c000000 0000000f 00000000
 ```
 
-For those who are wanting a break down on how to calculate the NVCAP value:
+对于那些想要了解如何计算NVCAP值的人来说:
 
-::: details NVCAP Table
+::: details NVCAP 列表
 
 Info based off of [WhateverGreen's NVCAP.bt file](https://github.com/acidanthera/WhateverGreen/blob/master/Manual/NVCAP.bt)
 
 | NVCAP Bit | Name | Comment |
 | :--- | :--- | :--- |
-| Byte 1 | NVCAP Version | `04` for 7 series and older, `05` for 8 series and newer |
-| Byte 2 | Laptop with Lid | `01` for true, `00` otherwise |
-| Byte 3 | Composite | `01` for S-Video, `00` otherwise |
-| Byte 4 | Backlight | `01` for Tesla V1 with Backlight, otherwise `00` for newer GPUs regardless of screen type |
-| Bytes 5+6   | TVDCBMask    | `00 00`, relates to DCB entry 5 |
-| Bytes 7+8   | Head0DCBMask | `00 00`, see below |
-| Bytes 9+10  | Head1DCBMask | `00 00`, see below |
-| Bytes 11+12 | Head2DCBMask | `00 00`, non-applicable for Fermi and older |
-| Bytes 13+14 | Head3DCBMask | `00 00`, non-applicable for Fermi and older |
-| Byte 15 | ScriptBasedPowerAndBacklight| `00`, only relevant for genuine MacBook Pros |
-| Byte 16 | Unknown | `0F` for 300 series and newer, otherwise `07` |
+| Byte 1 | NVCAP Version | `04`代表7系列和更早的版本，`05`代表8系列和更新的版本。 |
+| Byte 2 | Laptop with Lid | `01`表示真实，否则为`00` |
+| Byte 3 | Composite | `01`代表S-Video, `00`否则 |
+| Byte 4 | Backlight | `01`代表带背光的Tesla V1，否则`00`代表较新的GPU，与屏幕类型无关 |
+| Bytes 5+6   | TVDCBMask    | `00 00`，与DCB条目5有关 |
+| Bytes 7+8   | Head0DCBMask | `00 00`, 见下文 |
+| Bytes 9+10  | Head1DCBMask | `00 00`, 见下文 |
+| Bytes 11+12 | Head2DCBMask | `00 00`, 不适用于Fermi和更早的版本。 |
+| Bytes 13+14 | Head3DCBMask | `00 00`, 不适用于Fermi和更早的版本。 |
+| Byte 15 | ScriptBasedPowerAndBacklight| `00`，只适用于真正的MacBook Pro |
+| Byte 16 | Unknown |  `0F`适用于300系列和更新的产品，否则`07` |
 | Byte 17 | EDID | `00` |
 | Byte 18 | Reserved | `00` |
 | Byte 19 | Reserved | `00` |
@@ -174,9 +174,9 @@ Info based off of [WhateverGreen's NVCAP.bt file](https://github.com/acidanthera
 
 :::
 
-### Cleaning up
+### 清理工作
 
-Now that we've gotten all our properties, we can now add em up and place them in our config.plist:
+现在我们已经得到了所有的属性，现在我们可以把它们添加起来，并把它们放在我们的config.plist中:
 
 ```
 PciRoot(0x2)/Pci(0x0,0x0)/Pci(0x0,0x0)
@@ -194,6 +194,6 @@ NVCAP          |  Data  | 05000000 00000300 0c000000 0000000f 00000000
 @1,name        | String | NVDA,Display-B
 ```
 
-Open your config.plist and head to `DeviceProperties -> Add`, next create a new child with the name of your GPU's path(ie the one with gfxutil). Then, finally add the properties as children to the PciRoot. You should end up with something similar:
+打开你的config.plist并前往`DeviceProperties -> Add`，接下来用你的GPU的路径名称创建一个新的子项（即有gfxutil的那个）。然后，最后将这些属性作为子项添加到PciRoot中。你最终应该得到类似的东西。
 
 ![](../../images/gpu-patching/nvidia/deviceproperties.png)
