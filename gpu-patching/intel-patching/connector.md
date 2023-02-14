@@ -1,47 +1,47 @@
-# Patching Connector Types
+# 修补连接器类型
 
-* Images and info based off [CorpNewt's Vanilla Guide](https://hackintosh.gitbook.io/-r-hackintosh-vanilla-desktop-guide/config.plist-per-hardware/coffee-lake#pink-purple-tint)
+* 图片和信息基于[CorpNewt's Vanilla Guide](https://hackintosh.gitbook.io/-r-hackintosh-vanilla-desktop-guide/config.plist-per-hardware/coffee-lake#pink-purple-tint)
 
-This section is mainly relevant for users who either get black screen or incorrect color output on their displays(usually HDMI ports). This is due to Apple forcing display types onto your hardware,. To work around it, we'll patch Apple's connector types to properly respect our hardware.
+本节主要与那些在显示器（通常是HDMI端口）上出现黑屏或不正确颜色输出的用户有关。这是由于苹果公司在你的硬件上强制显示类型。为了解决这个问题，我们将修补苹果的连接器类型，以正确尊重我们的硬件。
 
-For this example, let's take a UHD 630 system with an HDMI display attached. The machine has already been correctly setup however there's a Pink/Purple tint on the HDMI display.
+在这个例子中，让我们来看看一个连接了HDMI显示器的UHD 630系统。这台机器已经被正确设置，但是在HDMI显示器上有一个粉红色/紫色的色调。
 
-Grab a copy of [IOReg](https://github.com/khronokernel/IORegistryClone/blob/master/ioreg-302.zip) and search for the `iGPU` entry:
+获得一份[IOReg](https://github.com/khronokernel/IORegistryClone/blob/master/ioreg-302.zip)的副本，搜索 `iGPU`条目。
 
 ![](../../images/gpu-patching/igpu-entry.png)
 
-Next, clear out the entry so we can see the children of the iGPU device:
+接下来，清除该条目，这样我们就可以看到iGPU设备。
 
 ![](../../images/gpu-patching/igpu-children.png)
 
-As we can see in the above screenshot, we have a few framebuffer entries listed. These are all display personalities present in the framebuffer personality, and all have their own settings.
+正如我们在上面的截图中所看到的，我们有几个帧缓冲器的条目被列出。这些都是存在于framebuffer特型中的显示特型，并且都有自己的设置。
 
-For us, we care about the entries that have a `display0` child, as this is what's driving a physical display. In this example, we can see it's `AppleIntelFramebuffer@1`. When we select it, you'll see in the left pane it has the property `connector-type` with the value `<00 04 00 00>`. And when we look to the below list:
+对我们来说，我们关心的是那些有`display0`子项的条目，因为这就是驱动物理显示器的东西。在这个例子中，我们可以看到它是`AppleIntelFramebuffer@1`。当我们选择它时，你会看到在左边的窗格中，它的属性 `connector-type`的值是`<00 04 00 00>`。而当我们看下面的列表时：
 
 ```
-<02 00 00 00>        LVDS and eDP      - Laptop displays
-<10 00 00 00>        VGA               - Unsupported in 10.8 and newer
-<00 04 00 00>        DisplayPort       - USB-C display-out are DP internally
-<01 00 00 00>        DUMMY             - Used when there is no physical port
+<02 00 00 00>        LVDS 和 eDP      - 笔记本电脑显示器
+<10 00 00 00>        VGA               - 在10.8和更新的版本中不被支持
+<00 04 00 00>        DisplayPort       - USB-C显示输出内部为DP
+<01 00 00 00>        DUMMY             - 在没有物理端口时使用
 <00 08 00 00>        HDMI
 <80 00 00 00>        S-Video
-<04 00 00 00>        DVI (Dual Link)
-<00 02 00 00>        DVI (Single Link)
+<04 00 00 00>        DVI (双链路)
+<00 02 00 00>        DVI (单链路)
 ```
 
-* Note: VGA on Skylake and newer are DisplayPorts internally and so are supported by macOS. Please use the DisplayPort connector for these systems.
+* 注意：Skylake和更新版本的VGA在内部是DisplayPorts，所以被macOS支持。对于这些系统，请使用DisplayPort接口。
 
-Looking closer, we see that the HDMI port was actually listed as a DisplayPort. This is where WhateverGreen's patching mechanisms come into play.
+仔细观察，我们发现HDMI端口实际上被列为DisplayPort。这就是WhateverGreen的修补机制发挥作用的地方。
 
-Since the incorrect port was located at AppleIntelFramebuffer@1, this is port 1. Next we'll to enable WhateverGreen's patching mechanism for con1, and then set the connector type to HDMI. To do this,  we set the following Properties under `DeviceProperties -> Add -> PciRoot(0x0)/Pci(0x2,0x0)`:
+由于错误的端口位于AppleIntelFramebuffer@1，这就是端口1。接下来，我们要为con1启用WhateverGreen的修补机制，然后将连接器类型设置为HDMI。要做到这一点，我们在`DeviceProperties -> Add -> PciRoot(0x0)/Pci(0x2,0x0)`下设置以下属性。
 
 * `framebuffer-patch-enable = 01000000`
-  * Enables WhateverGreen's patching mechanism
+  * 启用WhateverGreen的补丁机制
 * `framebuffer-conX-enable = 01000000`
-  * Enables WhateverGreen's patching on conX
+  * 启用WhateverGreen在conX上的补丁
 * `framebuffer-conX-type = 00080000`
-  * Sets the port to HDMI(`<00 08 00 00>`)
+  * 设置端口为HDMI(`<00 08 00 00>`)
 
-Note: Remember to replace the `conX` in both patches with `con1` to reflect the port that we want fixed, then set the values as listed above.
+注意：记得将两个补丁中的`conX`替换为 `con1`，以反映我们想要固定的端口，然后按上面列出的值设置。
 
 ![](../../images/gpu-patching/connector-type-patch.png)
