@@ -88,7 +88,7 @@ This firmware has UNLOCKED MSR 0xE2 register!
 
 1. 用UEFITool打开你的固件，然后找到`CFG Lock`这个Unicode字符串。如果没有弹出，那么你的固件不支持 `CFG Lock`，否则继续下去。
 
-![](./images/extras/msr-lock-md/uefi-tool.png)
+![](../images/extras/msr-lock-md/uefi-tool.png)
 
 1. 你会发现这个字符串是在Setup文件夹中找到的，右击并导出为`Setup.bin`（甚至是`Setup.sct`）。
 2. 用`ifrextract`打开你的设置文件，用终端导出为.txt文件。
@@ -98,11 +98,11 @@ This firmware has UNLOCKED MSR 0xE2 register!
    ```
 
 3. 打开文本文件，搜索`CFG Lock, VarStoreInfo (VarOffset/VarName):`并注意它后面的偏移量（如：`0x43`）和偏移量后面的VarStore ID（如：`0x3`）。
-![](./images/extras/msr-lock-md/MSR-Find.png)
+![](../images/extras/msr-lock-md/MSR-Find.png)
 
 4. 搜索`VarStoreId: 0x3`，其中`0x3`被替换为你找到的VarStoreId的值，并注意它后面的`名称`(即：`CpuSetup`)
 
-![](./images/extras/msr-lock-md/VarStoreID-Find.png)
+![](../images/extras/msr-lock-md/VarStoreID-Find.png)
 
 1. 运行修改后的GRUB Shell并编写以下命令，其中`CpuSetup`被替换为你之前提取的VarStore Name，`0x43`被替换为你之前提取的offset。
 
