@@ -1,36 +1,36 @@
-# Installing and using BootCamp utilities
+# 安装和使用BootCamp工具
 
-So a neat feature of OpenCore is the ability to avoid the BIOS entirely and use Startup disk solely for multiboot. Problem comes in when we try to boot windows and have no way of setting the boot option back to macOS. That's where the BootCamp utilities come in.
+OpenCore的一个简洁特性是能够完全避免BIOS，只使用启动盘进行多引导。当我们试图引导windows，但没有办法将引导选项设置回macOS时，问题就出现了。这就是BootCamp工具的用武之地。
 
-* Note: This guide will not cover the creation of the Windows installer, only the installation of BootCamp drivers.
-  * Example of Windows installer creation: [Build a Bootable Windows ISO](https://www.freecodecamp.org/news/how-make-a-windows-10-usb-using-your-mac-build-a-bootable-iso-from-your-macs-terminal/)
-  * Reminder: Windows **MUST** be GPT/GUID based, OpenCore will not boot legacy installs
-* Note 2: Using BootCamp utilities from macOS will erase the EFI/BOOT/BOOTx64.efi file on your EFI, which is needed for booting OpenCore. And OpenCore itself does not support MBR based installs so the utility is useless to us
+* 注意:本指南将不介绍Windows安装程序的创建，只介绍BootCamp驱动程序的安装。
+  * 创建Windows安装程序的例子:[构建一个可引导的Windows ISO](https://www.freecodecamp.org/news/how-make-a-windows-10-usb-using-your-mac-build-a-bootable-iso-from-your-macs-terminal/)
+  * 提醒:Windows **必须**基于GPT/GUID, OpenCore将不会引导legacy安装
+* 注意2:从macOS使用BootCamp工具将擦除EFI/BOOT/BOOTx64.EFI文件，这是启动OpenCore所需的。而且OpenCore本身不支持基于MBR的安装，因此该实用程序对我们毫无用处
 
-## Preparations
+## 准备工作
 
-To start we'll need the following:
+首先，我们需要以下内容:
 
-* Windows already installed
-  * MUST be UEFI/GPT based
+* 已经安装Windows
+  * 必须基于UEFI / GPT
 * [Brigadier](https://github.com/corpnewt/brigadier)
-  * To download the BootCamp drivers
-* Setup [LauncherOption](../multiboot/bootstrap.md)
-  * Not required but can help alleviate headaches when Windows erases the BOOTx64.efi OpenCore uses
+  * 下载BootCamp驱动程序
+* 设置[LauncherOption] (../multiboot/bootstrap.md)
+  * 不是必需的，但可以帮助缓解OpenCore使用的BOOTx64.efi擦除Windows时的头痛
 
-## Installation
+## 安装
 
-To install, it's as simple as grabbing [Brigadier](https://github.com/corpnewt/brigadier) and running either `Brigadier.bat` for Windows or `Brigadier.command` for macOS. If the SMBIOS you're currently using either has BootCamp issues or want to download for another SMBIOS, you can add `--  model{SMBIOS}` to the end:
+安装非常简单，只需获取[Brigadier](https://github.com/corpnewt/brigadier)并运行`Brigadier`。Windows使用`.bat`， macOS使用`Brigadier.command`。如果你当前使用的SMBIOS有BootCamp问题，或者想下载另一个SMBIOS，你可以在末尾添加`——model{SMBIOS}`:
 
 ```sh
 path/to/Brigadier --model MacPro7,1
 ```
 
-* **Note**: Older versions of the BootCamp installer(6.0) do not support APFS, you'll need to either choose a newer SMBIOS that would have it bundled(ie. iMac 19,1) or after installation update your bootcamp software. See below for more details on troubleshooting: [Windows Startup Disk can't see APFS drives](#windows-startup-disk-cant-see-apfs-drives)
+* **注意**:旧版本的BootCamp安装程序(6.0)不支持APFS，你需要选择一个更新的SMBIOS将它捆绑(即。iMac 19,1)或在安装后更新你的bootcamp软件。有关故障排除的更多细节请参见下面的内容:[Windows启动磁盘无法看到APFS驱动器](#windows-startup-disk-cant-see-apfs-drives)
 
 ![](../images/bootcamp-md/extension.png)
 
-Next you will find our bootcamp drivers under either:
+接下来你会在下面找到我们的bootcamp驱动程序:
 
 * Windows:
 
@@ -44,97 +44,97 @@ Next you will find our bootcamp drivers under either:
 /Users/{Username}/BootCamp-{filename}/WindowsSupport.dmg
 ```
 
-macOS users will next need to expand WindowsSupport.dmg and place it somewhere Windows can get.
+macOS用户接下来需要扩展WindowsSupport.dmg，并把它放在Windows可以得到的地方。
 
 ![](../images/bootcamp-md/done.png)
 
-Next, within Windows, you have two choices.
+接下来，在Windows中，您有两个选择。
 
-Either navigate to the `bootcamp-{filename}\BootCamp` folder and run `Setup.exe`, this requires correct spoofing of SMBIOS SystemProductName - shown as System Model in Windows - to launch:
+要么导航到`bootcamp-{filename}\ bootcamp`文件夹，然后运行`Setup. txt`文件。这需要正确的SMBIOS SystemProductName欺骗-显示为系统模型在Windows -以启动:
 
 ![](../images/bootcamp-md/location.png)
 
-Alternatively, launch `bootcamp-{filename}\BootCamp\Drivers\Apple\BootCamp.msi` as Administrator - for instance by starting it directly from an Administrator command shell - this skips the BootCamp model check entirely:
+或者，以管理员身份启动`bootcamp-{filename}\bootcamp\Drivers\Apple\bootcamp.msi`——例如，通过直接从管理员命令shell启动它——这将完全跳过bootcamp模型检查:
 
 ![](../images/bootcamp-md/location_msi.png)
 
-Once all is finished, you now have BootCamp switching! There should be a little BootCamp icon in you tray now that you can select which drive to boot to.
+一旦所有完成，你现在有BootCamp切换!在你的托盘中应该有一个小的BootCamp图标，现在你可以选择启动到哪个驱动器。
 
-* Note: For those no needing the extra drivers BootCamp provides, you can delete the following:
-  * `$WinPEDriver$`: **DO NOT** delete the folder itself, just the drivers inside
-    * Apple Wifi card users will want to keep the following:
+* 注意:对于那些不需要BootCamp提供的额外驱动程序，你可以删除以下内容:
+  * `$WinPEDriver$`: **不要**删除文件夹本身，只删除里面的驱动程序
+    * 苹果Wifi卡用户需要保留以下内容:
       * `$WinPEDriver$/BroadcomWireless`
       * `$WinPEDriver$/BroadcomBluetooth`
       * `$WinPEDriver$/AppleBluetoothBroadcom`
   * `BootCamp/Drivers/...`
-    * **DO NOT** delete `BootCamp/Drivers/Apple`
-    * Apple Wifi card users will want to keep the following:
+    * **不要** 删除 `BootCamp/Drivers/Apple`
+    * 苹果Wifi卡用户需要保留以下内容:
       * `BootCamp/Drivers/Broadcom/BroadcomBluetooth`
 
-## Troubleshooting
+## 故障排除
 
-* [Can't find Windows/BootCamp drive in picker](#cant-find-windowsbootcamp-drive-in-picker)
-* ["You can't change the startup disk to the selected disk" error](#you-cant-change-the-startup-disk-to-the-selected-disk-error)
-* [Booting Windows results in BlueScreen or Linux crashes](#booting-windows-results-in-bluescreen-or-Linux-crashes)
-* [Booting Windows error: `OCB: StartImage failed - Already started`](#booting-windows-error-ocb-startimage-failed---already-started)
-* [Windows Startup Disk can't see APFS drives](#windows-startup-disk-cant-see-apfs-drives)
+* [在选择器中找不到Windows/BootCamp驱动器](#cant-find-windowsbootcamp-drive-in-picker)
+* ["您不能将启动磁盘更改为所选磁盘"错误](#you-cant-change-the-startup-disk-to-the-selected-disk-error)
+* [启动Windows会导致蓝屏或Linux崩溃](#booting-windows-results-in-bluescreen-or-Linux-crashes)
+* [引导Windows错误:`OCB: StartImage failed - Already started`](#booting-windows-error-ocb-startimage-failed---already-started)
+* [Windows启动盘看不到APFS驱动器](#windows-startup-disk-cant-see-apfs-drives)
 
-## Can't find Windows/BootCamp drive in picker
+## 在选择器中找不到Windows/BootCamp驱动器
 
-So with OpenCore, we have to note that legacy Windows installs are not supported, only UEFI. Most installs now are UEFI based but those made by BootCamp Assistant in macOS are legacy based, so you'll have to find other means to make an installer(Google's your friend). This also means MasterBootRecord/Hybrid partitions are also broken so you'll need to format the drive you want to install onto with DiskUtility.
+因此，使用OpenCore，我们必须注意，传统的Windows安装不支持，只有UEFI。现在大多数安装是基于UEFI的，但是那些由BootCamp Assistant在macOS中制作的是基于legacy的，所以你必须找到其他方法来制作安装程序(谷歌是你的朋友)。这也意味着MasterBootRecord/Hybrid分区也被破坏了，所以你需要格式化你想安装到DiskUtility的驱动器。
 
-Now to get onto troubleshooting:
+现在开始进行故障排除:
 
-* Make sure `Misc -> Security -> ScanPolicy` is set to `0` to show all drives
+* 确保 `Misc -> Security -> ScanPolicy` 设置为 `0` 以显示所有驱动器
 
-If Windows and OpenCore's boot loaders are on the same drive, you'll need to add a BlessOverride entry:
+如果Windows和OpenCore的引导加载程序在同一个驱动器上，你需要添加一个BlessOverride条目:
 
 ```
 Misc -> BlessOverride -> \EFI\Microsoft\Boot\bootmgfw.efi
 ```
 
-* **Note**: As of OpenCore 0.5.9, this no longer needs to be specified. OpenCore should pick up on this entry automatically
+* **注**:从OpenCore 0.5.9开始，这个不再需要指定。OpenCore应该会自动发现这个条目
 
 ![](../images/win-md/blessoverride.png)
 
-## "You can't change the startup disk to the selected disk" error
+## "您不能将启动磁盘更改为所选磁盘"错误
 
-This is commonly caused by either:
+这通常是由以下原因引起的:
 
-* 3rd Party NTFS Drivers(ie. Paragon)
-* Irregular partition setup of the Windows drive, specifically that the EFI is not the first partition.
+* 第三方NTFS驱动程序(即。Paragon)
+* Windows驱动器的不规则分区设置，特别是EFI不是第一个分区。
 
-To fix the former, either disable or uninstall these tools.
+要修复前者，要么禁用或卸载这些工具。
 
-To fix the latter, we need to enable this quirk:
+要解决后者，我们需要启用这个选项:
 
 * `PlatformInfo -> Generic -> AdviseFeatures -> True`
 
 ![](../images/bootcamp-md/error.png)
 
-## Booting Windows results in BlueScreen or Linux crashes
+## 启动Windows会导致蓝屏或Linux崩溃
 
-This is due to alignment issues, make sure `SyncRuntimePermissions` is enabled on firmwares supporting MATs. Check your logs whether your firmware supports Memory Attribute Tables(generally seen on 2018 firmwares and newer)
+这是由于对齐问题，请确保在支持MATs的固件上启用了`SyncRuntimePermissions`。检查你的日志，你的固件是否支持内存属性表(通常在2018年或更新的固件上看到)
 
-For Z390 and newer motherboards, you'll also want to enable `ProtectUefiServices` to ensure OpenCore's patches are applying correctly.
+对于Z390和更新的主板，您还需要启用`ProtectUefiServices`以确保正确应用OpenCore的补丁。
 
-If your firmware is quite old(generally 2013 and older), you'll want to enable `ProtectMemoryRegions`.
+如果你的固件很旧(通常是2013年或更老)，你需要启用`ProtectMemoryRegions`。
 
-Due to the variations of firmwares from vendor to vendor, you'll need to play around with the combination of these 3 quirks and see which works best.
+由于不同厂商的固件版本不尽相同，你需要尝试一下这3种特性的组合，看看哪一种效果最好。
 
-Common Windows error code:
+常见的Windows错误代码:
 
 * `0xc000000d`
 
-## Booting Windows error: `OCB: StartImage failed - Already started`
+## 引导Windows错误:`OCB: StartImage failed - Already started`
 
-This is due to OpenCore getting confused when trying to boot Windows and accidentally thinking it's booting OpenCore. This can be avoided by either move Windows to it's own drive *or* adding a custom drive path under BlessOverride. See [Configuration.pdf](https://github.com/acidanthera/OpenCorePkg/blob/master/Docs/Configuration.pdf) and [Can't find Windows/BootCamp drive in picker](#cant-find-windowsbootcamp-drive-in-picker) entry for more details.
+这是由于OpenCore在尝试引导Windows时感到困惑，并意外地认为它正在引导OpenCore。这可以通过移动Windows到它自己的驱动器*或*在BlessOverride下添加一个自定义驱动器路径来避免。参见[Configuration.pdf](https://github.com/acidanthera/OpenCorePkg/blob/master/Docs/Configuration.pdf)和[在选择器中找不到Windows/BootCamp驱动器](#cant-find-windowsbootcamp-drive-in-picker)条目了解更多详细信息。
 
-## Windows Startup Disk can't see APFS drives
+## Windows启动盘看不到APFS驱动器
 
-* Outdated BootCamp drivers(generally ver 6.0 will come with brigadier, BootCamp Utility in macOS provides newer version like ver 6.1). You can try to alleviate these issues by either updating to the newest release with Apple's software updater or selecting a newer SMBIOS from brigadier(ie. `--model iMac19,1`) and when running brigadier.
+* 过时的BootCamp驱动程序(通常6.0版本会附带brigadier, macOS中的BootCamp实用程序提供了较新的版本，如ver 6.1)。你可以尝试用苹果的软件更新程序更新到最新版本，或者从brigadier(也就是苹果电脑)选择更新的SMBIOS来缓解这些问题。（如’——iMac19,1’)和跑brigadier的时候。
 
-For the latter, you'll need to run the following(replace `filename.msi` with the BootCamp installation msi):
+对于后者，你需要运行以下命令(将`文件名.msi`替换为BootCamp安装的msi):
 
 ```sh
 msiexec.exe /x "c:\filename.msi"
