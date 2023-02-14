@@ -75,7 +75,7 @@
 0300220D = AAPL,ig-platform-id
 ```
 
-From here, lets open up our config.plist and head to DeviceProperties -> Add. Now we'll want to add a new Entry called `PciRoot(0x0)/Pci(0x2,0x0)`. This is the location of Intel's iGPUs relative to the IOService path, and has been consistent as far back as Yonah series CPUs(2007+):
+从这里，让我们打开我们的config.plist，并前往DeviceProperties -> Add。现在我们要添加一个新条目，名为 `PciRoot(0x0)/Pci(0x2,0x0)`。这是英特尔iGPU相对于IOS服务路径的位置，从Yonah系列CPU（2007年以上）开始，这个位置就一直是一致的。
 
 | Key | Type | Value |
 | :--- | :--- | :--- |
@@ -83,22 +83,22 @@ From here, lets open up our config.plist and head to DeviceProperties -> Add. No
 
 ![](../../images/gpu-patching/ig-platform.png)
 
-### device-id explainer
+### device-id解释
 
-`device-id` is what macOS, or more specifically IOKit, uses to determine which devices are allowed to connect to which drivers. Why this is important for us is that Apple's iGPU drivers have a limited amount of IDs even though the kext itself can support much more.
+“device-id”是macOS，或者更具体地说是IOKit用来确定允许哪些设备连接到哪些驱动程序的参数。这对我们来说很重要，因为苹果的iGPU驱动器的id数量有限，而kext本身可以支持更多的id。
 
-To determine whether you need a new `device-id` injected, you'll want to compare [WhateverGreen's list of supported IDs](https://github.com/acidanthera/WhateverGreen/blob/master/Manual/FAQ.IntelHD.en.md) to what you have.
+要确定是否需要注入新的“device-id”，你需要将[WhateverGreen的支持id列表](https://github.com/acidanthera/WhateverGreen/blob/master/Manual/FAQ.IntelHD.en.md)与你所拥有的进行比较。
 
-For this example, lets take a look at the i3-4150 with an HD 4400 iGPU. Using [Intel's ARK page](https://ark.Intel.com/content/www/us/en/ark/products/77486/Intel-core-i3-4150-processor-3m-cache-3-50-ghz.html), we can see the following:
+在这个例子中，让我们看看带有HD 4400 iGPU的i3-4150. 使用[英特尔方舟页面](https://ark.Intel.com/content/www/us/en/ark/products/77486/Intel-core-i3-4150-processor-3m-cache-3-50-ghz.html)，我们可以看到以下内容：
 
 ```
 Device ID = 0x41E
 ```
 
-Now that we have our actual Device ID, lets compare it to [WhateverGreen's list](https://github.com/acidanthera/WhateverGreen/blob/master/Manual/FAQ.IntelHD.en.md):
+现在我们有了实际的设备ID，让我们把它与[WhateverGreen的列表](https://github.com/acidanthera/WhateverGreen/blob/master/Manual/FAQ.IntelHD.en.md)进行比较。
 
 ```
-Native supported DevIDs:
+本地支持的DevIDs。
 
  0x0d26
  0x0a26
@@ -107,26 +107,26 @@ Native supported DevIDs:
  0x0412
 ```
 
-Unfortunately the ID is not present in macOS, so we'll need to find a similar iGPU to ours and use their Device ID. The HD 4600 found in the [i3-4330](https://ark.Intel.com/content/www/us/en/ark/products/77769/Intel-core-i3-4330-processor-4m-cache-3-50-ghz.html) is a very close match, so we'll use its Device ID:
+不幸的是，这个ID在macOS中不存在，所以我们需要找到一个与我们类似的iGPU并使用它们的设备ID。在[i3-4330](https://ark.Intel.com/content/www/us/en/ark/products/77769/Intel-core-i3-4330-processor-4m-cache-3-50-ghz.html)中发现的HD 4600是非常接近的，所以我们将使用它的设备ID。
 
 ```
 Device ID = 0x412
 ```
 
-However, by default this cannot be injected. We'll need to first pad it to 8 bits and hex swap:
+然而，在默认情况下，这不能被注入。我们需要首先将其填充到8位，然后进行十六进制交换。
 
 ```md
-# First, remove 0x and pad it to 8 bits by using 0's in front of it
+# 首先，去掉0x，在它前面用0来填充到8位
 0x412 -> 00 00 04 12
 
-# Next reverse it, but keep the pairs in tact
+# 接下来将其反转，但保持对数不变
 00 00 04 12 -> 12 04 00 00
 
-# And voila, you have your device-id
+# 然后，你就得到了你的设备ID
 12040000 = device-id
 ```
 
-Now that we have our device-id, we'll do the same thing as before with ig-platform-id. Open your config.plist and add this new entry under `PciRoot(0x0)/Pci(0x2,0x0)`:
+现在我们有了我们的设备ID，我们将做与之前ig-platform-id相同的事情。打开你的config.plist，在 `PciRoot(0x0)/Pci(0x2,0x0)`下添加这个新条目。
 
 | Key | Type | Value |
 | :--- | :--- | :--- |
@@ -134,21 +134,21 @@ Now that we have our device-id, we'll do the same thing as before with ig-platfo
 
 ![](../../images/gpu-patching/device-id.png)
 
-## Learning to patch with WhateverGreen
+## 学习用WhateverGreen打补丁
 
-Now that we've gone over the basics of setting up an iGPU, let's get into some deeper topics. We'll need to go over some  prerequisites first:
+现在我们已经了解了设置iGPU的基础知识，让我们进入一些更深入的话题。我们首先需要了解一些前提条件。
 
-* Lilu and WhateverGreen are present under EFI/OC/Kexts and in your config.plist
-  * To verify if they loaded correctly in macOS, run the below command(if nothing is outputted, the kexts are not loading)
-  * `kextstat | grep -E "Lilu|WhateverGreen"`
-* `DeviceProperties -> Add -> PciRoot(0x0)/Pci(0x2,0x0)` has been correctly setup
-  * Refer to your specific generation in the [config.plist section](https://sumingyd.github.io/OpenCore-Install-Guide/)
+* Lilu和WhateverGreen存在于EFI/OC/Kexts下和你的config.plist中。
+  * 要验证它们在macOS中是否正确加载，运行下面的命令（如果没有输出，说明kexts没有被加载）
+  * `kextstat | grep -E "Lilu|WhateverGreen"`。
+* `DeviceProperties -> Add -> PciRoot(0x0)/Pci(0x2,0x0)`已经被正确设置。
+  * 参考你在[config.plist](https://sumingyd.github.io/OpenCore-Install-Guide/)部分的具体生成
 
-Now head forth into your framebuffer patching journey!:
+现在开始你的帧缓冲器补丁之旅吧！。
 
-* [Patching the VRAM requirement of macOS](./vram.md)
-  * Relevant for systems with locked BIOS and cannot increase the VRAM
-* [Patching the display type](./connector.md)
-  * Relevant for systems where you may get distorted colors on certain monitors
-* [Patching the display connections](./busid.md)
-  * Relevant for systems where certain display outputs do not work
+* [对macOS的VRAM要求进行修补](./vram.md)
+  * 与锁定BIOS和不能增加VRAM的系统有关。
+* [修补显示类型](./connector.md)
+  * 与在某些显示器上可能得到失真的颜色的系统有关。
+* [修补显示连接](./busid.md)
+  * 与某些显示输出不工作的系统有关
