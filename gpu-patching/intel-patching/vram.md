@@ -1,10 +1,10 @@
-# Patching VRAM
+# 给VRAM打补丁
 
-This section is mainly relevant for users who cannot unlock their BIOS to increase the allocated VRAM for their iGPU which results in a kernel panic in macOS. To work around this, we'll first want to identify the minimum amount of VRAM required for the framebuffer and then patch it to require less.
+本节主要与那些不能解锁BIOS以增加分配给iGPU的VRAM的用户有关，这将导致macOS的内核崩溃。为了解决这个问题，我们首先要确定帧缓冲器所需的最小VRAM量，然后打补丁使其要求更少。
 
-For this example, let's take a Haswell Lake Framebuffer that's commonly used on desktop Haswell iGPUs: `0x0D220003`(`0300220D` when hex swapped)
+在这个例子中，让我们举一个Haswell Lake帧缓冲器，它通常用于桌面Haswell iGPU。`0x0D220003`(`0300220D`当十六进制互换时)
 
-Now let's take a look at the corresponding information in [WhateverGreen's manual](https://github.com/acidanthera/WhateverGreen/blob/master/Manual/FAQ.IntelHD.en.md)(note you'll need to click "Spoiler: Azul connectors")
+现在让我们看看[WhateverGreen的手册](https://github.com/acidanthera/WhateverGreen/blob/master/Manual/FAQ.IntelHD.en.md)中的相应信息(注意你需要点击 "Spoiler: Azul connectors")
 
 ```
 ID: 0D220003, STOLEN: 32 MB, FBMEM: 19 MB, VRAM: 1536 MB, Flags: 0x00000402
@@ -19,61 +19,61 @@ Mobile: 0, PipeCount: 3, PortCount: 3, FBMemoryCount: 3
 03060800 00040000 11000000
 ```
 
-Here what matters is the first 2 lines:
+这里重要的是前两行。
 
 ```
 ID: 0D220003, STOLEN: 32 MB, FBMEM: 19 MB, VRAM: 1536 MB, Flags: 0x00000402
 TOTAL STOLEN: 52 MB, TOTAL CURSOR: 1 MB (1572864 bytes), MAX STOLEN: 116 MB, MAX OVERALL: 117 MB (123219968 bytes)
 ```
 
-Here the main entries we care about:
+这里是我们关心的主要条目。
 
 | Entry | Value | Comment |
 | :--- | :--- | :--- |
-| STOLEN | 32MB | Memory reserved for the iGPU |
-| FBMEM | 19MB | Memory reserved for the framebuffer |
-| TOTAL CURSOR | 1 MB | Memory reserved for cursor |
-| TOTAL STOLEN | 52 MB | Combination of the above |
+| STOLEN | 32MB | 保留给iGPU的内存 |
+| FBMEM | 19MB | 为帧缓冲器保留的内存 |
+| TOTAL CURSOR | 1 MB | 为游标保留的内存 |
+| TOTAL STOLEN | 52 MB | 以上的组合 |
 
-Now let's say for example your motherboard only allocates 32MB for the iGPU, this will be too little for what the framebuffer expects and so will most likely kernel panic when it tries to write into an area of memory that does not exist.
+例如，你的主板只为iGPU分配了32MB的内存，这对于帧缓冲器所期望的来说太少了，所以当它试图写入一个不存在的内存区域时，很可能会出现内核崩溃。
 
-That's where WhateverGreen's patching capabilities come in, here we're able to set the exact amount of iGPU memory the framebuffer expects with the following properties:
+这就是WhateverGreen的补丁功能的作用，在这里我们可以通过以下属性设置帧缓冲器所期望的iGPU内存的确切数量。
 
 | Value | Comment |
 | :--- | :--- |
-| framebuffer-patch-enable | This enables WhateverGreen's patching capabilities |
-| framebuffer-stolenmem | This sets the value used by `STOLEN` entry |
-| framebuffer-fbmem | This sets the value used by `FBMEM` entry |
+| framebuffer-patch-enable | 这启用了WhateverGreen的补丁功能 |
+| framebuffer-stolenmem | 这设置了`STOLEN`条目所使用的值 |
+| framebuffer-fbmem | 这设置了`FBMEM`项使用的值 |
 
-## Creating our patch
+## 创建我们的补丁
 
-So to lower this VRAM requirement, we'll want to set `STOLEN` to 19MB and `FBMEM` to 9MB. This will get us underneath the 32MB limit.
+因此，为了降低这个VRAM要求，我们要把`STOLEN`设置为19MB，`FBMEM`设置为9MB。这将使我们低于32MB的限制。
 
-To do this, we run the following commands to covert 9MB:
+要做到这一点，我们运行以下命令来覆盖9MB。
 
 ```md
-# Convert 9MB Megabytes to Bytes
+# 将9MB的兆字节转换成字节数
 echo '9 * 1024 * 1024' | bc
  9437184
 
-# Convert from decimal to hexadecimal
+# 从十进制转换为十六进制
 echo 'obase=16; ibase=10; 9437184' | bc
  900000
 
-# Hexswap so it can be injected correctly
-# ie. swap in pairs
+# 十六进制交换，以便能够正确注入
+# 即成对地交换
 900000 -> 90 00 00 -> 00 00 90
 
-# Pad the value to 4 bytes with 00 at the end
+# 将数值填充到4个字节，最后是00
 00 00 90 00
 ```
 
-And when we do this for both value, we get:
+当我们对这两个值都这样做时，我们会得到:
 
 * 19MB = `00 00 30 01`
 * 9MB = `00 00 90 00`
 
-And when we punch it into our WhateverGreen properties:
+当我们把它打入我们的WhateverGreen属性时。
 
 | Key | Type | Value
 | :--- | :--- | :--- |
@@ -81,10 +81,10 @@ And when we punch it into our WhateverGreen properties:
 | framebuffer-stolenmem | Data | 00003001 |
 | framebuffer-fbmem | Data | 00009000 |
 
-* For `patch-enable`, 01000000 simply refers to being enabled
+* 对于`patch-enable`，01000000只是指被启用。
 
-## Applying our patch
+## 应用我们的补丁
 
-Now with our patch made, head into your config.plist then under `DeviceProperties -> Add -> PciRoot(0x0)/Pci(0x2,0x0)` and add the properties:
+现在我们打好了补丁，进入你的config.plist，然后在 `DeviceProperties -> Add -> PciRoot(0x0)/Pci(0x2,0x0)`下，添加属性。
 
 ![](../../images/gpu-patching/vram.png)
