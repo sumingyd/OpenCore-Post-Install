@@ -224,7 +224,7 @@ sudo rm /Library/Preferences/SystemConfiguration/preferences.plist
 
 ## 修复ROM
 
-T这是一个很多人可能已经忘记的部分，但它可以在你的 config.plist 文件 PlatformInfo -> Generic -> ROM 下看到
+这是一个很多人可能已经忘记的部分，但它可以在你的 config.plist 文件 PlatformInfo -> Generic -> ROM 下看到
 
 要找到实际的MAC地址/ROM值，你可以在以下几个地方找到:
 
@@ -308,7 +308,7 @@ com.apple.facetime: registrationV1
 
 给账户加一张支付卡，有足够的购买量也会有所帮助。虽然不是具体的，但你可以把AppleID看作一个信用评分，你是一个越好的苹果用户，他们就越有可能不会出现激活问题，或者更容易获得苹果支持
 
-::
+:::
 
 ## 客户代码错误
 

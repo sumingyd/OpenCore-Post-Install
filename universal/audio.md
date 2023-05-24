@@ -158,7 +158,7 @@ kextstat | grep -E "AppleHDA|AppleALC|Lilu"
 * **注入顺序**:确保Lilu在kext顺序上高于AppleALC
 * **所有的kext都是最新版本**:对于Lilu插件尤其重要，因为不匹配的kext可能会导致问题
 
-Note: To setup file logging, see [OpenCore Debugging](https://sumingyd.github.io/OpenCore-Install-Guide/troubleshooting/debug.html).
+注意:要设置文件日志记录，请参见[OpenCore调试](https://sumingyd.github.io/OpenCore-Install-Guide/troubleshooting/debug.html).
 
 ### 检查AppleALC是否正确打补丁
 
@@ -175,13 +175,13 @@ Note: To setup file logging, see [OpenCore Debugging](https://sumingyd.github.io
 
 注意:**不要手动重命名你的音频控制器**，这可能会导致问题，因为AppleALC正在尝试打补丁。让AppleALC做它的工作。
 
-**More examples**:
+**更多的例子**:
 
-Correct layout-id           |  Incorrect layout-id
+正确 layout-id           |  不正确的 layout-id
 :-------------------------:|:-------------------------:
 ![](../images/post-install/audio-md/right-layout.png)  |  ![](../images/post-install/audio-md/wrong-layout.png)
 
-As you can see from the above 2, the right image is missing a lot of AppleHDAInput devices, meaning that AppleALC can't match up your physical ports to something it can understand and output to. This means you've got some work to find the right layout ID for your system.
+正如你从上面的2中看到的那样，右边的图像缺少了很多applehindput设备，这意味着AppleALC无法将你的物理端口匹配到它可以理解和输出的东西。这意味着你需要做一些工作来为你的系统找到正确的布局ID。
 
 ### 检查AppleHDA是否正常
 
